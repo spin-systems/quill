@@ -6,22 +6,14 @@
 
 ## Usage memo
 
-Load the `quill` module:
+- Requires directory of `spin.systems` static sites at
+  location specified in [`spin.ini`](spin.ini) (by default
+  this is as a sibling directory `../ss/`).
 
-```sh
-python -ic "from qu import quill"
-```
-⇣
-```STDOUT
->>> mmd = quill.mmd(manifest)
->>> mmd.nodes
-[-spin.systems:, -:cal, -,:log, -,:conf, -,:pore, -,:ocu, -,:arc, -,:qrx, -,:erg, -,:opt, -,:poll, -,:arb, -,:reed, -,:noto, -,:plot, -,:doc, -,:labs]
->>> mmd.nodes[0]
--spin.systems:
->>> mmd.nodes[0].prefix
-<Prefix.PlainNode: ('-',)>
->>> mmd.nodes[0].suffix
-<Suffix.InitList: ':'>
->>> mmd.nodes[0].contents
+```py
+>>> from qu import quill
+>>> quill.ssm
+Block of 17 nodes
+>>> quill.ssm.nodes[0].contents
 'spin.systems'
 ```
