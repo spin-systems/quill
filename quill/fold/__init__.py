@@ -1,3 +1,3 @@
-from .ns import ns
+from .ns_util import *
 
-__all__ = ["ns"]
+__all__ = ["ns", "ns_path"]

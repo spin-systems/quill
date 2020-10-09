@@ -1,7 +1,7 @@
 from . import __path__ as _dir_nspath
 from pathlib import Path
 
-__all__ = []
+__all__ = ["qu_path"]
 qu_path = Path(list(_dir_nspath)[0])
 
 # used for prefix dicts
