@@ -3,6 +3,7 @@ from ...__share__ import classproperty
 
 __all__ = []
 
+
 def has_precedent(seen, prefix):
     """
     Check if there is a seen node with a given prefix.
@@ -11,15 +12,16 @@ def has_precedent(seen, prefix):
     """
     return any([n.prefix == prefix for n in seen])
 
+
 def lever_config_dict():
     """
     Return default parser config
     """
-    c = {
+    return {
         # Permit `Prefix.ListInit` without directly preceding `Suffix.ListInit`
         "ALLOW_LIST_WITHOUT_SUFFIX_INIT": True
     }
-    return c
+
 
 def tokenise_line(line, seen=None, config=None):
     """
@@ -32,18 +34,18 @@ def tokenise_line(line, seen=None, config=None):
     default_config = lever_config_dict()
     if config:
         # Only allow custom config keys also present in default_config dict
-        config = {k:v for k,v in config.items() if k in default_config}
-        config = {**default_config, **config} # override default config
+        config = {k: v for k, v in config.items() if k in default_config}
+        config = {**default_config, **config}  # override default config
     else:
         config = default_config
     ############## Read config variables ##############
     ALLOW_LIST_WITHOUT_SUFFIX_INIT = config.get("ALLOW_LIST_WITHOUT_SUFFIX_INIT")
     ############# End config instantation #############
-    seen = seen if seen else [] # avoid default mutable arg gotcha
-    has_history = len(seen) > 0 # preceding tokenised line(s)
-    penultimate = seen[-1] if has_history else None # directly preceding
+    seen = seen if seen else []  # avoid default mutable arg gotcha
+    has_history = len(seen) > 0  # preceding tokenised line(s)
+    penultimate = seen[-1] if has_history else None  # directly preceding
     if line == "":
-        return Node() # Empty call passes all arguments with default value `None`
+        return Node()  # Empty call passes all arguments with default value `None`
     else:
         node = Node(prefix=None, contents=line.rstrip("\n"), suffix=None)
         if line.startswith("-:"):
@@ -81,10 +83,52 @@ def tokenise_line(line, seen=None, config=None):
         # If this succeeded without raising an error, make contents
     return node
 
+
+class BlockDoc:
+    """
+    Document formed by a list of one or more `NodeBlock` elements,
+    created upon reading file lines (newlines will be stripped).
+    """
+
+    def __init__(self, lines):
+        self._parselines(lines)
+
+    def _add_nodeblock(self, lines):
+        self.blocks.append(NodeBlock(lines))
+
+    def _parselines(self, doc_lines):
+        doc_lines = [l.rstrip("\n") for l in doc_lines]
+        self.blocks = []
+        current_line_block = []
+        for l in doc_lines:
+            if l == "" and current_line_block:
+                self._add_nodeblock(current_line_block)
+                current_line_block = []
+            else:
+                current_line_block.append(l)
+        if current_line_block:
+            self._add_nodeblock(current_line_block)
+
+    @property
+    def blocks(self):
+        return self._blocks
+
+    @blocks.setter
+    def blocks(self, blocks):
+        self._blocks = blocks
+
+    @property
+    def n_blocks(self):
+        return len(self.blocks)
+
+    def __repr__(self):
+        s = "s" if (self.n_blocks != 1) else ""
+        return f"Document of {self.n_blocks} block{s}"
+
 class NodeBlock:
     def __init__(self, block_lines):
-        self._nodes = [] # private property
-        self.parse_lines(block_lines) # populate nodes property
+        self._nodes = []  # private property
+        self.parse_lines(block_lines)  # populate nodes property
 
     @property
     def nodes(self):
@@ -107,14 +151,17 @@ class NodeBlock:
             parsed.append(n)
         # Since preceding lines' nodes are modified in the processing
         # of subsequent lines, only add nodes to block after finishing.
-        for node in parsed: self.add_node(node)
+        for node in parsed:
+            self.add_node(node)
         return
+
 
 class Node:
     """
     Provide a simple string-repr while storing the Prefix and Suffix
     as properties (intervening `contents` is just a string for now).
     """
+
     def __init__(self, prefix=None, contents=None, suffix=None):
         self.prefix = prefix
         self.contents = contents
@@ -137,11 +184,11 @@ class Node:
             ex_prefix = self.prefix
             if ex_prefix:
                 assert self.contents, "Tried to change prefix on contents-less Node"
-                self.contents = ex_prefix.str + self.contents # reconstitute
+                self.contents = ex_prefix.str + self.contents  # reconstitute
             if p:
-                self.contents = self.contents[len(p.str):]
+                self.contents = self.contents[len(p.str) :]
         if p:
-            assert isinstance(p, Prefix) # prefix must be either `None` or `Prefix` Enum
+            assert isinstance(p, Prefix)  # must be either `None` or `Prefix` Enum
         self._prefix = p
 
     @property
@@ -150,10 +197,6 @@ class Node:
 
     @contents.setter
     def contents(self, c):
-        #if hasattr(self, "_contents"):
-        #    print(f"Changing contents from '{self.contents}' to '{c}'")
-        #else:
-        #    print(f"Initialising contents as '{c}'")
         self._contents = c
 
     @property
@@ -169,9 +212,9 @@ class Node:
                 assert self.contents, "Tried to change suffix on content-less Node"
                 self.contents = self.contents + ex_suffix.str
             if s:
-                self.contents = self.contents[:-len(s.str)]
+                self.contents = self.contents[: -len(s.str)]
         if s:
-            assert isinstance(s, Suffix) # suffix must be either `None` or `Suffix` Enum
+            assert isinstance(s, Suffix)  # must be either `None` or `Suffix` Enum
         self._suffix = s
 
 
@@ -179,6 +222,7 @@ class Affix(Enum):
     """
     Affixes following the MMD 'lever' format specification.
     """
+
     @classmethod
     def name_from_token(cls, tok):
         return cls.tok2name_dict.get(tok)
@@ -201,6 +245,7 @@ class Affix(Enum):
     def str(self):
         return self.value[0]
 
+
 class Prefix(Affix):
     """
     Prefixes following the MMD 'lever' format specification. Capital
@@ -208,22 +253,25 @@ class Prefix(Affix):
     Note that no prefix is given for a blank line and a section break
     spans the entire line (it is treated as a terminating prefix).
     """
-    PlainNode = "-", # A or Cb [if line ends with colon and precedes C"
-    FollowOn = "-,", # Ac
-    InitList = "-:", # B [default: indicating a list] or Cr [if after C]
-    ContList = "-,:", # Bc
-    Question = "-?", # C
-    ContQuestion = "-,?", #Cc
-    Descent = "-..", # D
-    ContDesc = "-.,", # Dc
-    Ascent = "-,,", # Du
-    Therefore = "-:.", # E
-    Because = "-:'", # F
-    SectBreak = "-~==~-", # G
+
+    PlainNode = ("-",)  # A or Cb [if line ends with colon and precedes C"
+    FollowOn = ("-,",)  # Ac
+    InitList = ("-:",)  # B [default: indicating a list] or Cr [if after C]
+    ContList = ("-,:",)  # Bc
+    Question = ("-?",)  # C
+    ContQuestion = ("-,?",)  # Cc
+    Descent = ("-..",)  # D
+    ContDesc = ("-.,",)  # Dc
+    Ascent = ("-,,",)  # Du
+    Therefore = ("-:.",)  # E
+    Because = ("-:'",)  # F
+    SectBreak = ("-~==~-",)  # G
+
 
 class Suffix(Affix):
     """
     Suffixes following the MMD 'lever' format specification'. Capital
     letters indicate token symbols [backwards from Z].
     """
+
     InitList = ":"

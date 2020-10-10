@@ -1,9 +1,9 @@
-from .lever import NodeBlock
+from .mmd_util import MMD
 
 __all__ = ["mmd"]
 
-def mmd(mmd):
-    with open(mmd) as f:
+def mmd(filepath):
+    with open(filepath) as f:
         mmd_lines = f.readlines()
-    block = NodeBlock(mmd_lines)
-    return block
+    m = MMD(mmd_lines)
+    return m
