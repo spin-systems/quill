@@ -22,15 +22,31 @@ Document of 1 block
 [Block of 17 nodes]
 >>> qu.ssm.doc.blocks[0]
 Block of 17 nodes
->>> qu.ssm.doc.blocks[0].nodes
-[-spin.systems:, -:cal, -,:log, -,:conf, -,:pore, -,:ocu, -,:arc, -,:qrx, -,:erg, -,:opt, -,:poll, -,:arb, -,:reed, -,:noto, -,:plot, -,:doc, -,:labs]
+>>> from pprint import pprint
+>>> pprint(qu.ssm.doc.blocks[0].nodes)
+[-spin.systems:,
+ -:cal,
+ -,:log,
+ -,:conf,
+ -,:pore,
+ -,:ocu,
+ -,:arc,
+ -,:qrx,
+ -,:erg,
+ -,:opt,
+ -,:poll,
+ -,:arb,
+ -,:reed,
+ -,:noto,
+ -,:plot,
+ -,:doc,
+ -,:labs]
 >>> qu.ssm.doc.blocks[0].nodes[0]
 -spin.systems:
->>> n = qu.ssm.doc.blocks[0].nodes[0]
->>> n.
-n.contents  n.prefix    n.suffix    
->>> n.prefix
+>>> qu.ssm.doc.blocks[0].nodes[0].prefix
 <Prefix.PlainNode: ('-',)>
->>> n.contents
+>>> qu.ssm.doc.blocks[0].nodes[0].contents
 'spin.systems'
+>>> qu.ssm.doc.blocks[0].nodes[0].suffix
+<Suffix.InitList: ':'>
 ```
