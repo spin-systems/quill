@@ -1,6 +1,6 @@
 from .tokens import Suffix, Prefix, tokenise_line
 
-__all__ = ["ParsedDoc", "BlockDoc", "NodeBlock"]
+__all__ = ["Doc", "BlockDoc", "NodeBlock"]
 
 class BlockDoc:
     """
@@ -42,15 +42,6 @@ class BlockDoc:
     def __repr__(self):
         s = "s" if (self.n_blocks != 1) else ""
         return f"Document of {self.n_blocks} block{s}"
-
-class ParsedDoc(BlockDoc):
-    def __init__(self, lines):
-        super().__init__(lines)
-
-    def __repr__(self):
-        block_repr = super().__repr__()
-        parsed_repr = "1 list (EXAMPLE)"
-        return f"{block_repr}, containing {parsed_repr}"
 
 class NodeBlock:
     def __init__(self, block_lines):
