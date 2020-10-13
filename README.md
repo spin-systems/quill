@@ -13,38 +13,57 @@
   immediately followed by a subdomain list.
 
 ```py
+>>> from pprint import pprint
 >>> import qu
 >>> qu.ssm
 Parsed MMD file (Document of 1 block, containing 1 list)
 >>> qu.ssm.doc
 Document of 1 block, containing 1 list
->>> qu.ssm.doc.blocks
-[Block of 17 nodes]
->>> from pprint import pprint
->>> pprint(qu.ssm.doc.blocks[0].nodes)
-[-spin.systems:,
- -:cal,
- -,:log,
- -,:conf,
- -,:pore,
- -,:ocu,
- -,:arc,
- -,:qrx,
- -,:erg,
- -,:opt,
- -,:poll,
- -,:arb,
- -,:reed,
- -,:noto,
- -,:plot,
- -,:doc,
- -,:labs]
->>> qu.ssm.doc.lists
-[Headered list with 16 items]
->>> qu.ssm.doc.lists[0].nodes
-[-:cal, -,:log, -,:conf, -,:pore, -,:ocu, -,:arc, -,:qrx, -,:erg, -,:opt, -,:poll, -,:arb, -,:reed, -,:noto, -,:plot, -,:doc, -,:labs]
->>> qu.ssm.doc.lists[0].header
--spin.systems:
->>> qu.ssm.doc.lists[0].all_nodes
-[-spin.systems:, -:cal, -,:log, -,:conf, -,:pore, -,:ocu, -,:arc, -,:qrx, -,:erg, -,:opt, -,:poll, -,:arb, -,:reed, -,:noto, -,:plot, -,:doc, -,:labs]
+>>> qu.ssm.doc.list
+Headered list with 16 items
+>>> pprint(qu.ssm.doc.list.all_nodes)
+[-spin.systems:spin-systems:,
+ -:cal:qu-cal,
+ -,:log:spin-log,
+ -,:conf:qu-conf,
+ -,:pore:qu-pore,
+ -,:ocu:naiveoculus,
+ -,:arc:appendens,
+ -,:qrx:qu-arx,
+ -,:erg:spin-erg,
+ -,:opt:spin-opt,
+ -,:poll:qu-poll,
+ -,:arb:spin-arb,
+ -,:reed:qu-reed,
+ -,:noto:qu-noto,
+ -,:plot:qu-plot,
+ -,:doc:spin-doc,
+ -,:labs:qu-labs]
+>>> pprint(qu.ssm.doc.list.nodes)
+[-:cal:qu-cal,
+ -,:log:spin-log,
+ -,:conf:qu-conf,
+ -,:pore:qu-pore,
+ -,:ocu:naiveoculus,
+ -,:arc:appendens,
+ -,:qrx:qu-arx,
+ -,:erg:spin-erg,
+ -,:opt:spin-opt,
+ -,:poll:qu-poll,
+ -,:arb:spin-arb,
+ -,:reed:qu-reed,
+ -,:noto:qu-noto,
+ -,:plot:qu-plot,
+ -,:doc:spin-doc,
+ -,:labs:qu-labs]
+>>> qu.ssm.doc.list.header
+-spin.systems:spin-systems:
+>>> qu.ssm.doc.list.header.parts
+['spin.systems', 'spin-systems']
+>>> qu.ssm.doc.list.nodes[0].parts
+['cal', 'qu-cal']
+>>> qu.ssm.doc.list.nodes[1].parts
+['log', 'spin-log']
+>>> qu.ssm.doc.list.nodes[2].parts
+['conf', 'qu-conf']
 ```

@@ -31,3 +31,6 @@
 - Due to the recursive functions used to parse block-level elements, it is now necessary
   to label nodes with their line numbers upon parsing (as an attribute of `Node`).
 - Perhaps only store node `linenumber` index within `DocList` to remove the duplication?
+- Use the `parent_elem` argument to `BlockList` where the header is within some
+  other structure (e.g. has a continuation prefix) to 'situate' it within its block.
+- Autodetect a structured list (default: off, or it will slow down list parsing)
