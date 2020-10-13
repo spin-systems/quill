@@ -1,5 +1,5 @@
 from enum import Enum
-from ....__share__ import classproperty
+from .....__share__ import classproperty
 
 __all__ = ["tokenise_line", "Prefix", "Suffix", "Node"]
 
