@@ -15,13 +15,11 @@
 ```py
 >>> import qu
 >>> qu.ssm
-Parsed MMD file (Document of 1 block)
+Parsed MMD file (Document of 1 block, containing 1 list)
 >>> qu.ssm.doc
-Document of 1 block
+Document of 1 block, containing 1 list
 >>> qu.ssm.doc.blocks
 [Block of 17 nodes]
->>> qu.ssm.doc.blocks[0]
-Block of 17 nodes
 >>> from pprint import pprint
 >>> pprint(qu.ssm.doc.blocks[0].nodes)
 [-spin.systems:,
@@ -41,12 +39,10 @@ Block of 17 nodes
  -,:plot,
  -,:doc,
  -,:labs]
->>> qu.ssm.doc.blocks[0].nodes[0]
+>>> qu.ssm.doc.lists
+[Headered list with 16 items]
+>>> qu.ssm.doc.lists[0].nodes
+[-:cal, -,:log, -,:conf, -,:pore, -,:ocu, -,:arc, -,:qrx, -,:erg, -,:opt, -,:poll, -,:arb, -,:reed, -,:noto, -,:plot, -,:doc, -,:labs]
+>>> qu.ssm.doc.lists.items[0].header
 -spin.systems:
->>> qu.ssm.doc.blocks[0].nodes[0].prefix
-<Prefix.PlainNode: ('-',)>
->>> qu.ssm.doc.blocks[0].nodes[0].contents
-'spin.systems'
->>> qu.ssm.doc.blocks[0].nodes[0].suffix
-<Suffix.InitList: ':'>
 ```

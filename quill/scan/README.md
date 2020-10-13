@@ -23,11 +23,11 @@
 - `Doc` is intended to be the 'parser' class initialised following the 'tokenisation'
   of the input `.mmd` file's lines, and will 'tag' nodes as being of certain
   types, from which block-level and document-level elements can be assigned.
-
+  - The `lever.parse_nodes_to_list` function returns a generator yielding all
+    block-level lists (`BlockList` objects) which are collected at the document level
+    in `Doc` following tokenisation, in `Doc.lists`. 
 ### TODO
 
-- Call the `parse_nodes_to_list` function recursively to annotate the `Node`s of a
-  `NodeBlock` and tie these together in `Doc`. Perhaps only store node `linenumber`
-  index.
 - Due to the recursive functions used to parse block-level elements, it is now necessary
   to label nodes with their line numbers upon parsing (as an attribute of `Node`).
+- Perhaps only store node `linenumber` index within `DocList` to remove the duplication?
