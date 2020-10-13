@@ -30,7 +30,7 @@ class BlockList(BlockElem):
 
     @property
     def all_nodes(self):
-        return (self.header + self.nodes) if header else self.nodes
+        return [self.header, *self.nodes] if self.header else self.nodes
 
     def __repr__(self):
         headered = ("H" if self.header else "Unh") + "eadered"

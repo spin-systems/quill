@@ -43,6 +43,8 @@ Document of 1 block, containing 1 list
 [Headered list with 16 items]
 >>> qu.ssm.doc.lists[0].nodes
 [-:cal, -,:log, -,:conf, -,:pore, -,:ocu, -,:arc, -,:qrx, -,:erg, -,:opt, -,:poll, -,:arb, -,:reed, -,:noto, -,:plot, -,:doc, -,:labs]
->>> qu.ssm.doc.lists.items[0].header
+>>> qu.ssm.doc.lists[0].header
 -spin.systems:
+>>> qu.ssm.doc.lists[0].all_nodes
+[-spin.systems:, -:cal, -,:log, -,:conf, -,:pore, -,:ocu, -,:arc, -,:qrx, -,:erg, -,:opt, -,:poll, -,:arb, -,:reed, -,:noto, -,:plot, -,:doc, -,:labs]
 ```
