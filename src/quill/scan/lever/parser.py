@@ -1,29 +1,41 @@
 from .structure import BlockDoc
-from .blockelems import * # temporary
+from .blockelems import *  # temporary
 from .docelems import DocLists
-from .lists import parse_nodes_to_list
+from .lists import parse_nodes_to_list, SepBlockList
 
 __all__ = ["Doc"]
 
+
 class Doc(BlockDoc):
     def __init__(self, lines, listparseconfig=None):
-        super().__init__(lines) # block tokenisation pass, creating nodes property
-        self.parse(listparseconfig) # tokenised block parsing, creating lists property
+        super().__init__(lines)  # block tokenisation pass, creating nodes property
+        self._parse(listparseconfig)  # tokenised block parsing, creating lists property
 
-    def parse(self, listparseconfig=None):
+    def _parse(self, listparseconfig=None):
         # populate the `lists` property by parsing all blocks' nodes
-        self.parse_lists(listparseconfig)
+        self._parse_lists(listparseconfig)
 
-    def parse_lists(self, listparseconfig=None):
+    def _parse_lists(self, listparseconfig=None):
         all_blocklists = []
         for block in self.blocks:
             nodes = block.nodes
             # yields blocklist objects
             blocklist_generator = parse_nodes_to_list(nodes, listparseconfig)
-            blocklists = list(blocklist_generator) # exhaust generator
-            all_blocklists.extend(blocklists) # flat list: all BlockList objects in Doc
+            blocklists = list(blocklist_generator)  # exhaust generator
+            all_blocklists.extend(blocklists)  # flat list: all BlockList objects in Doc
         # `DocLists` object from list of BlockList objects
-        self.lists = DocLists(all_blocklists) 
+        self.lists = DocLists(all_blocklists)
+        if (
+            listparseconfig
+            and "listclass" in listparseconfig
+            and listparseconfig.get("listclass") is SepBlockList
+        ):
+            # N.B. maybe use an Enum rather than have to pass actual class?
+            self.all_parts = [
+                n.parts
+                for l in self.lists
+                for n in (l.all_nodes if l.has_sep_header else l.nodes)
+            ]
         # TODO: wasteful to store nodes twice: just store index for header/list items
 
     @property
@@ -45,9 +57,14 @@ class Doc(BlockDoc):
     def lists(self, ll):
         self._lists = ll
 
-    def __repr__(self):
+    @property
+    def _doc_repr(self):
+        "Private property to enable access from MMD superclass"
         block_repr = super().__repr__()
         cont = ", containing "
         parsed_list_repr = self.lists.repr_str if self.lists else ""
         parsed_repr = f"{cont}{parsed_list_repr}" if self.lists else ""
         return f"{block_repr}{parsed_repr}"
+
+    def __repr__(self):
+        return self._doc_repr

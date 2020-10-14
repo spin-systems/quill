@@ -81,24 +81,26 @@ class SepBlockList(BlockList):
     """
     def __init__(self, nodes, h=None, par=None, sep=":", headersep=False, labels=None):
         super().__init__(nodes, header=h, parent_elem=par)
-        self.tokenise_separated_values(sep, headersep, labels) # sets `parts` attribute
+        self.sep = sep
+        self.has_sep_header = headersep
+        self.tokenise_separated_values(labels) # sets `parts` attribute
 
-    def tokenise_separated_values(self, sep, sep_header=False, sep_header_labels=None):
+    def tokenise_separated_values(self, sep_header_labels=None):
         n_parts = None
-        if sep_header: # there should be a header, to be parsed for sep. values
+        if self.has_sep_header: # there should be a header, to be parsed for sep. values
             assert self.header, "Cannot parse header: list is unheadered"
             header_offset = 0
             if sep_header_labels:
                 labsetcount = len(set(sep_header_labels))
                 labsetcheck = labsetcount == n_labels
-                assert labsetcheck, f"{n_labels} labels =/= {labsetcheck} values"
+                assert labsetcheck, f"{n_labels} labels =/= {labsetcount} values"
                 assert "parts" not in sep_header_labels, "'parts' is a reserved label"
         elif self.header: # there is a header but not parsing for sep. values
             header_offset = 1
         else: # there is no header so nothing to skip
             header_offset = 0
         for node in self.all_nodes[header_offset:]:
-            parts = node.contents.split(sep)
+            parts = node.contents.split(self.sep)
             if n_parts: # if sep. values count per node already set on first seen node
                 lencheck = len(parts) == n_parts
                 assert lencheck, f"{node} has {len(parts)} parts (expected {n_parts})"
