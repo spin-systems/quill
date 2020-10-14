@@ -22,8 +22,6 @@ as a list of colon-separated values).
 >>> from qu import ssm
 >>> ssm
 Parsed MMD file (Document of 1 block, containing 1 list)
->>> ssm
-Document of 1 block, containing 1 list
 >>> ssm.list
 Headered list with 16 items
 >>> pprint(ssm.list.all_nodes)
