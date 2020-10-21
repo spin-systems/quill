@@ -261,4 +261,5 @@ each domain in the manifest is now in `ns` (i.e. whether a local repo has been c
 16          labs       qu-labs        1            git@gitlab.com:qu-labs/qu-labs.gitlab.io.git   True
 ```
 
-We can now use this to generate [a nice README](src/quill/fold/README.md) for the `fold` subpackage!
+We can now use this to generate a nice README for the spin.systems superrepo(?) corresponding to
+a nicely formatted markdown doc of the info in this DataFrame. (TODO)
