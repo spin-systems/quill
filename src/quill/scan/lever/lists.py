@@ -19,17 +19,12 @@ def create_BlockList(nodes, has_header, listclass=BlockList, config=None):
     else:
         return listclass(nodes, header)
 
-def parse_nodes_to_list(nodes, listparseconfig=None, listclass=BlockList):
+def parse_nodes_to_list(nodes, listconfig=None, listclass=BlockList):
     """
     Generator function which yields all lists per block, ignoring any intervening
     or pre/succeeding non-list nodes (except any directly preceding 'header' node,
     with a line-terminating colon marked as `Suffix.ListInit`).
     """
-    if listparseconfig:
-        if "listclass" in listparseconfig:
-            listclass = listparseconfig.get("listclass")
-        if "listconfig" in listparseconfig:
-            listconfig = listparseconfig.get("listconfig")
     nodes = nodes.copy() # do not modify input!
     list_open = list_header_open = False
     has_header = False

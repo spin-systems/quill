@@ -3,10 +3,15 @@ from .blockelems import *  # temporary
 from .docelems import DocLists
 from .lists import parse_nodes_to_list, SepBlockList
 from pandas import concat, DataFrame as DF
+from ...manifest.parsing import read_man, read_man_df
 
 __all__ = ["Doc"]
 
 class PartsList(list):
+    """
+    Simple list class which provides a pandas DataFrame method which will be
+    bound to the `Doc` instance (via a descriptor).
+    """
     def __init__(self, parts, part_keys=None):
         self.extend(parts)
         self.part_keys = part_keys
@@ -20,27 +25,29 @@ class Doc(BlockDoc):
     def __init__(self, lines, listparseconfig=None):
         super().__init__(lines)  # block tokenisation pass, creating nodes property
         self._parse(listparseconfig)  # tokenised block parsing, creating lists property
+        if hasattr(self, "all_parts") and self.all_parts.part_keys:
+            self.as_df = self.all_parts.as_df
+        if self.list:
+            self.repos = property(read_man).__get__(self)
+            self.repos_df = property(read_man_df).__get__(self)
 
     def _parse(self, listparseconfig=None):
+        "May add other configs later, but for now just wrap the lists method."
         # populate the `lists` property by parsing all blocks' nodes
-        self._parse_lists(listparseconfig)
+        self._parse_lists(**listparseconfig) # expand out dict as named arguments
 
-    def _parse_lists(self, listparseconfig=None):
+    def _parse_lists(self, listclass=None, part_keys=None, listconfig=None):
         all_blocklists = []
         for block in self.blocks:
             nodes = block.nodes
             # yields blocklist objects
-            blocklist_generator = parse_nodes_to_list(nodes, listparseconfig)
-            blocklists = list(blocklist_generator)  # exhaust generator
+            bl_generator = parse_nodes_to_list(nodes, listconfig, listclass)
+            blocklists = list(bl_generator)  # exhaust generator
             all_blocklists.extend(blocklists)  # flat list: all BlockList objects in Doc
         # `DocLists` object from list of BlockList objects
         self.lists = DocLists(all_blocklists)
-        if (
-            listparseconfig
-            and "listclass" in listparseconfig
-            and listparseconfig.get("listclass") is SepBlockList
-        ):
-            pk = ("domain", "repo_name", "priority") # hard code for now
+        if listclass is SepBlockList:
+            pk = part_keys
             # N.B. maybe use an Enum rather than have to pass actual class?
             self.all_parts = PartsList([
                 n.parts
