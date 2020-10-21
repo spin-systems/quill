@@ -121,7 +121,7 @@ roughly interpretable as
 This is just for review purposes currently, and any further info can be added as long
 as all the lines ("nodes") have the same number of colon-separated values.
 
-The manifest is parsed in [`manifest`⠶`parsing`](src/quill/manifest/man.py) by
+The manifest is parsed in [`manifest`⠶`parsing`](src/quill/manifest/parsing.py) by
 `parse_man_node` which is wrapped 
 
 ```py
