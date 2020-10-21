@@ -20,6 +20,7 @@ as a list of colon-separated values).
 ```py
 >>> from pprint import pprint
 >>> from qu import ssm
+>>> import pandas as pd
 >>> ssm
 Parsed MMD file (Document of 1 block, containing 1 list)
 >>> ssm.list
@@ -87,4 +88,34 @@ Headered list with 16 items
  ['plot', 'qu-plot'],
  ['doc', 'spin-doc'],
  ['labs', 'qu-labs']]
+>>> ssm.all_parts.as_df()
+          domain     repo_name priority
+0   spin.systems  spin-systems        4
+1            cal        qu-cal        3
+2            log      spin-log        4
+3           conf       qu-conf        4
+4           pore       qu-pore        2
+5            ocu   naiveoculus        4
+6            arc     appendens        4
+7            qrx        qu-arx        4
+8            erg      spin-erg        1
+9            opt      spin-opt        1
+10          poll       qu-poll        2
+11           arb      spin-arb        1
+12          reed       qu-reed        3
+13          noto       qu-noto        2
+14          plot       qu-plot        1
+15           doc      spin-doc        2
+16          labs       qu-labs        1
 ```
+
+The numeric entry is a rating of my recollection and/or
+resolve of the purpose for each of these projects,
+roughly interpretable as
+
+- 1. little
+- 2. some
+- 3. fair
+- 4. strong
+
+

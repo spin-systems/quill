@@ -2,9 +2,19 @@ from .structure import BlockDoc
 from .blockelems import *  # temporary
 from .docelems import DocLists
 from .lists import parse_nodes_to_list, SepBlockList
+from pandas import concat, DataFrame as DF
 
 __all__ = ["Doc"]
 
+class PartsList(list):
+    def __init__(self, parts, part_keys=None):
+        self.extend(parts)
+        self.part_keys = part_keys
+
+    def as_df(self):
+        pk = self.part_keys
+        df = concat([DF.from_dict(dict(zip(pk, [[e] for e in p]))) for p in self])
+        return df.reset_index().drop("index", 1)
 
 class Doc(BlockDoc):
     def __init__(self, lines, listparseconfig=None):
@@ -30,12 +40,13 @@ class Doc(BlockDoc):
             and "listclass" in listparseconfig
             and listparseconfig.get("listclass") is SepBlockList
         ):
+            pk = ("domain", "repo_name", "priority") # hard code for now
             # N.B. maybe use an Enum rather than have to pass actual class?
-            self.all_parts = [
+            self.all_parts = PartsList([
                 n.parts
                 for l in self.lists
                 for n in (l.all_nodes if l.has_sep_header else l.nodes)
-            ]
+            ], part_keys=pk)
         # TODO: wasteful to store nodes twice: just store index for header/list items
 
     @property
