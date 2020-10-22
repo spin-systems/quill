@@ -236,8 +236,15 @@ Et voila the namespace now contains all the repos (stored in the sibling `ss` di
  'spin.systems': 'https://gitlab.com/spin-systems/spin-systems.gitlab.io'}
 ```
 
-At the end of `source_manifest`, `ssm.repos_df` is updated with a column `local` indicating whether
-each domain in the manifest is now in `ns` (i.e. whether a local repo has been created).
+At the end of `source_manifest`, the `ssm.repos_df` DataFrame is updated with a column `local`
+indicating whether each domain in the manifest is now in the `ns` namespace (i.e. whether a
+local repo has been created), via the `check_manifest` method which `ssm`'s `MMD` class inherits
+from the `Doc` class.
+
+- This `update_manifest` method will be expanded to supplement the `repos_df` DataFrame with
+  other information worth knowing to do with the `git` status of the repo in question, for those
+  which are locally available. This ensures no unnecessary computation is done before the extra
+  information is needed.
 
 ```py
 >>> ssm.repos_df
@@ -261,5 +268,17 @@ each domain in the manifest is now in `ns` (i.e. whether a local repo has been c
 16          labs       qu-labs        1            git@gitlab.com:qu-labs/qu-labs.gitlab.io.git   True
 ```
 
-We can now use this to generate a nice README for the spin.systems superrepo(?) corresponding to
-a nicely formatted markdown doc of the info in this DataFrame. (TODO)
+## TODO
+
+- The next step is to read the CI YAML as the 'layout' for each site
+  - check it's valid (given a predetermined expected format for the YAML configs)
+- We can now use this to generate a nice README for the spin.systems superrepo(?) corresponding to
+  a nicely formatted markdown doc of the info in this DataFrame.
+  - For this, we reuse the original list representation, with the apex domain as the header,
+    and convert it to markdown to present it in the conventional format
+- I would also like to keep track of the `git status` of each repo in the same repo
+  - This will involve making the `repos_df` __always__ have the `local` column, 
+    for which I'll have to abstract away the call at the end of `fold`⠶`git`⠶`source_manifest`
+- A next step could be a class representing the state of the websites, which can
+  then be cross-referenced against the `repos_df` (but the goal is not to entirely Python-ise
+  the site development, just the management of key aspects to do with the version control on disk)

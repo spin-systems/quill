@@ -4,6 +4,7 @@ from .docelems import DocLists
 from .lists import parse_nodes_to_list, SepBlockList
 from pandas import concat, DataFrame as DF
 from ...manifest.parsing import read_man, read_man_df
+from ...fold.ns_util import ns
 
 __all__ = ["Doc"]
 
@@ -86,3 +87,6 @@ class Doc(BlockDoc):
 
     def __repr__(self):
         return self._doc_repr
+
+    def check_manifest(self):
+        self.repos_df["local"] = [domain in ns for domain in self.repos_df.domain]
