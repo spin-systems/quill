@@ -1,5 +1,6 @@
 from .blockelems import BlockList
 from .tokens import Prefix, Suffix
+from pandas import DataFrame
 
 __all__ = ["parse_nodes_to_list", "SepBlockList"]
 
@@ -59,6 +60,12 @@ def parse_nodes_to_list(nodes, listconfig=None, listclass=BlockList):
     if parsed:
         yield create_BlockList(parsed, has_header, listclass, listconfig)
 
+def _as_df(self):
+    labels = self._labels
+    nodes = self.all_nodes if self.has_sep_header else self.nodes
+    datadict = {label: [getattr(node, label) for node in nodes] for label in labels}
+    return DataFrame.from_dict(datadict)
+
 class SepBlockList(BlockList):
     """
     A structured variant of the `BlockList` block-level list, with a
@@ -79,6 +86,9 @@ class SepBlockList(BlockList):
         self.sep = sep
         self.has_sep_header = headersep
         self.tokenise_separated_values(labels) # sets `parts` attribute
+        self._labels = labels
+        if labels:
+            self.as_df = _as_df.__get__(self)
 
     def tokenise_separated_values(self, sep_header_labels=None):
         n_parts = None
@@ -87,7 +97,7 @@ class SepBlockList(BlockList):
             header_offset = 0
             if sep_header_labels:
                 labsetcount = len(set(sep_header_labels))
-                labsetcheck = labsetcount == n_labels
+                labsetcheck = labsetcount == labsetcount
                 assert labsetcheck, f"{n_labels} labels =/= {labsetcount} values"
                 assert "parts" not in sep_header_labels, "'parts' is a reserved label"
         elif self.header: # there is a header but not parsing for sep. values

@@ -1,8 +1,8 @@
 from .structure import BlockDoc
 from .blockelems import *  # temporary
 from .docelems import DocLists
-from .lists import parse_nodes_to_list, SepBlockList
-from pandas import concat, DataFrame as DF
+from .lists import parse_nodes_to_list, BlockList, SepBlockList
+from pandas import DataFrame
 from ...manifest.parsing import read_man, read_man_df
 from ...fold.ns_util import ns
 
@@ -18,13 +18,22 @@ class PartsList(list):
         self.part_keys = part_keys
 
     def as_df(self):
-        pk = self.part_keys
-        df = concat([DF.from_dict(dict(zip(pk, [[e] for e in p]))) for p in self])
-        return df.reset_index().drop("index", 1)
+        datadict = {k: [n[i] for n in self] for (i,k) in enumerate(self.part_keys)}
+        return DataFrame.from_dict(datadict)
 
 class Doc(BlockDoc):
     def __init__(self, lines, listparseconfig=None):
         super().__init__(lines)  # block tokenisation pass, creating nodes property
+        if listparseconfig is None:
+            listparseconfig = {"listclass": BlockList}
+        elif "sep" in listparseconfig and "listclass" not in listparseconfig:
+            # helper: do not require passing the list class itself, assume it from `sep`
+            sep_listconfig_keys = ["sep", "headersep", "labels"]
+            cfg = {k:v for (k,v) in listparseconfig.items() if k in sep_listconfig_keys}
+            for k in sep_listconfig_keys:
+                if k in listparseconfig:
+                    del listparseconfig[k]
+            listparseconfig.update({"listclass": SepBlockList, "listconfig": cfg})
         self._parse(listparseconfig)  # tokenised block parsing, creating lists property
         if hasattr(self, "all_parts") and self.all_parts.part_keys:
             self.as_df = self.all_parts.as_df
@@ -38,6 +47,11 @@ class Doc(BlockDoc):
         self._parse_lists(**listparseconfig) # expand out dict as named arguments
 
     def _parse_lists(self, listclass=None, part_keys=None, listconfig=None):
+        """
+        Note that for separator-delimited lists, `labels` (in `listconfig`) is for
+        setting the names of node attributes of each delimited value, while
+        `part_keys` sets column names on the pandas DataFrame.
+        """
         all_blocklists = []
         for block in self.blocks:
             nodes = block.nodes

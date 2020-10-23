@@ -29,5 +29,3 @@ def source_manifest():
             print(f"Failed on {url}: {e}", file=stderr)
     ssm.check_manifest()
     return
-
-# Can I read the description from the config file?

@@ -299,15 +299,45 @@ labs    SiteCI: PagesJob: {Stage.Deploy, Script <>, Artifacts: paths=['public'],
 - This setup is deliberately brittle, so any changes will need to be validated in the `fold.yaml_util` module,
   and so the library itself incorporates testing (simple `assert` statements based on a clear expected implementation)
 
+## Aliases
+
+The "canonical names" displayed in the README are the aliases, which by and large
+are the same as the domain names.
+
+These provide the titles of the index pages of each site.
+
+I might make more use of these in future, I originally only needed these
+as it turns out the description on GitHub/GitLab isn't stored in the git repo
+itself (silly as there's a `description` built in to `git`?)
+
+Using this let me generate a nice README for the spin.systems superrepo:
+
+> spin.systems: [`ss`](https://gitlab.com/spin.systems/spin.systems.gitlab.io)
+> 
+> - `cal`: [qu ⠶ cal](https://gitlab.com/qu-cal/qu-cal.gitlab.io)
+> - `log`: [spin ⠶ log](https://gitlab.com/spin-log/spin-log.gitlab.io)
+> - `conf`: [qu ⠶ conf](https://gitlab.com/qu-conf/qu-conf.gitlab.io)
+> - `pore`: [qu ⠶ pore](https://gitlab.com/qu-pore/qu-pore.gitlab.io)
+> - `ocu`: [spin ⠶ ocu](https://gitlab.com/naiveoculus/naiveoculus.gitlab.io)
+> - `arc`: [spin ⠶ arc](https://gitlab.com/appendens/appendens.gitlab.io)
+> - `qrx`: [qu ⠶ arx](https://gitlab.com/qu-arx/qu-arx.gitlab.io)
+> - `erg`: [spin ⠶ erg](https://gitlab.com/spin-erg/spin-erg.gitlab.io)
+> - `opt`: [spin ⠶ opt](https://gitlab.com/spin-opt/spin-opt.gitlab.io)
+> - `poll`: [qu ⠶ poll](https://gitlab.com/qu-poll/qu-poll.gitlab.io)
+> - `arb`: [spin ⠶ arb](https://gitlab.com/spin-arb/spin-arb.gitlab.io)
+> - `reed`: [qu ⠶ reed](https://gitlab.com/qu-reed/qu-reed.gitlab.io)
+> - `noto`: [qu ⠶ noto](https://gitlab.com/qu-noto/qu-noto.gitlab.io)
+> - `plot`: [qu ⠶ plot](https://gitlab.com/qu-plot/qu-plot.gitlab.io)
+> - `doc`: [spin ⠶ doc](https://gitlab.com/spin-doc/spin-doc.gitlab.io)
+> - `labs`: [qu ⠶ labs](https://gitlab.com/qu-labs/qu-labs.gitlab.io)
+
 ## TODO
 
-- We can now use this to generate a nice README for the spin.systems superrepo(?) corresponding to
-  a nicely formatted markdown doc of the info in this DataFrame.
-  - For this, we reuse the original list representation, with the apex domain as the header,
-    and convert it to markdown to present it in the conventional format
 - I would also like to keep track of the `git status` of each repo in the same repo
-  - This will involve making the `repos_df` __always__ have the `local` column, 
-    for which I'll have to abstract away the call at the end of `fold`⠶`git`⠶`source_manifest`
-- A next step could be a class representing the state of the websites, which can
+  - This requires `repos_df` to have the `local` column, which is added (or ensured) upon calling
+    the `ssm.check_manifest` method (as done at the end of  `fold`⠶`git`⠶`yaml_util`⠶`source_manifest`,
+    after [potentially] cloning modules locally)
+- A next step could be a class representing the state of the websites [beyond CI], which can
   then be cross-referenced against the `repos_df` (but the goal is not to entirely Python-ise
   the site development, just the management of key aspects to do with the version control on disk)
+
