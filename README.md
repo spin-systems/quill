@@ -268,10 +268,39 @@ from the `Doc` class.
 16          labs       qu-labs        1            git@gitlab.com:qu-labs/qu-labs.gitlab.io.git   True
 ```
 
+The next thing we can do (having established that these are now cloned locally) is to read the CI YAML
+as the 'layout' for each site, checking they're valid (according to the
+[reference](https://docs.gitlab.com/ee/ci/yaml/#pages) on YAML configs for GitLab Pages)
+
+```py
+>>> manifests = qu.yaml_manifests(as_dicts=False)
+>>> for k,m in manifests.items(): print(k, end="\t"); pprint(m)
+spin.systems    SiteCI: PagesJob: {Stage.Deploy, Script <>, Artifacts: paths=['public'], Only: branch=['master']}
+cal     SiteCI: PagesJob: {Stage.Deploy, Script <>, Artifacts: paths=['public'], Only: branch=['master']}
+log     SiteCI: PagesJob: {Stage.Deploy, Script <>, Artifacts: paths=['public'], Only: branch=['master']}
+conf    SiteCI: PagesJob: {Stage.Deploy, Script <docs/>, Artifacts: paths=['public'], Only: branch=['master']}
+pore    SiteCI: PagesJob: {Stage.Deploy, Script <>, Artifacts: paths=['public'], Only: branch=['master']}
+ocu     SiteCI: PagesJob: {Stage.Deploy, Script <>, Artifacts: paths=['public'], Only: branch=['master']}
+arc     SiteCI: PagesJob: {Stage.Deploy, Script <>, Artifacts: paths=['public'], Only: branch=['master']}
+qrx     SiteCI: PagesJob: {Stage.Deploy, Script <>, Artifacts: paths=['public'], Only: branch=['master']}
+erg     SiteCI: PagesJob: {Stage.Deploy, Script <>, Artifacts: paths=['public'], Only: branch=['master']}
+opt     SiteCI: PagesJob: {Stage.Deploy, Script <>, Artifacts: paths=['public'], Only: branch=['master']}
+poll    SiteCI: PagesJob: {Stage.Deploy, Script <>, Artifacts: paths=['public'], Only: branch=['master']}
+arb     SiteCI: PagesJob: {Stage.Deploy, Script <>, Artifacts: paths=['public'], Only: branch=['master']}
+reed    SiteCI: PagesJob: {Stage.Deploy, Script <>, Artifacts: paths=['public'], Only: branch=['master']}
+noto    SiteCI: PagesJob: {Stage.Deploy, Script <>, Artifacts: paths=['public'], Only: branch=['master']}
+plot    SiteCI: PagesJob: {Stage.Deploy, Script <>, Artifacts: paths=['public'], Only: branch=['master']}
+doc     SiteCI: PagesJob: {Stage.Deploy, Script <>, Artifacts: paths=['public'], Only: branch=['master']}
+labs    SiteCI: PagesJob: {Stage.Deploy, Script <>, Artifacts: paths=['public'], Only: branch=['master']}
+```
+
+- The only notable thing here is that `conf` serves its site from the `docs/` subdirectory, the rest do not
+- Obviously these could all be made more elaborate for less trivial scripts, this is a first draft showing basic functionality
+- This setup is deliberately brittle, so any changes will need to be validated in the `fold.yaml_util` module,
+  and so the library itself incorporates testing (simple `assert` statements based on a clear expected implementation)
+
 ## TODO
 
-- The next step is to read the CI YAML as the 'layout' for each site
-  - check it's valid (given a predetermined expected format for the YAML configs)
 - We can now use this to generate a nice README for the spin.systems superrepo(?) corresponding to
   a nicely formatted markdown doc of the info in this DataFrame.
   - For this, we reuse the original list representation, with the apex domain as the header,

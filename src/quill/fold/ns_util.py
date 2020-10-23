@@ -15,7 +15,7 @@ def resolve_ns_path(qp=qu_path, ini_fn="spin.ini"):
 
 def read_ns(qp=qu_path, ini_fn="spin.ini"):
     ns_p = resolve_ns_path(qu_path, ini_fn)
-    ns_subdirs = [d.parts[-1] for d in ns_p.iterdir() if d.is_dir()]
+    ns_subdirs = [d.name for d in ns_p.iterdir() if d.is_dir()]
     ns = {k: parse_subdomain_url(ns_p, k) for k in ns_subdirs}
     return ns
 

@@ -30,8 +30,4 @@ def source_manifest():
     ssm.check_manifest()
     return
 
-#def update_manifest():
-#    ssm.repos_df["local"] = [domain in ns for domain in ssm.repos_df.domain]
-#    return
-
 # Can I read the description from the config file?
