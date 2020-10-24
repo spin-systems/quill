@@ -312,6 +312,8 @@ itself (silly as there's a `description` built in to `git`?)
 
 Using this let me generate a nice README for the spin.systems superrepo:
 
+> # spin.systems
+> 
 > spin.systems: [`ss`](https://gitlab.com/spin.systems/spin.systems.gitlab.io)
 > 
 > - `cal`: [qu ⠶ cal](https://gitlab.com/qu-cal/qu-cal.gitlab.io)
@@ -319,7 +321,7 @@ Using this let me generate a nice README for the spin.systems superrepo:
 > - `conf`: [qu ⠶ conf](https://gitlab.com/qu-conf/qu-conf.gitlab.io)
 > - `pore`: [qu ⠶ pore](https://gitlab.com/qu-pore/qu-pore.gitlab.io)
 > - `ocu`: [spin ⠶ ocu](https://gitlab.com/naiveoculus/naiveoculus.gitlab.io)
-> - `arc`: [spin ⠶ arc](https://gitlab.com/appendens/appendens.gitlab.io)
+> - `arc`: [spin ⠶ app](https://gitlab.com/appendens/appendens.gitlab.io)
 > - `qrx`: [qu ⠶ arx](https://gitlab.com/qu-arx/qu-arx.gitlab.io)
 > - `erg`: [spin ⠶ erg](https://gitlab.com/spin-erg/spin-erg.gitlab.io)
 > - `opt`: [spin ⠶ opt](https://gitlab.com/spin-opt/spin-opt.gitlab.io)
