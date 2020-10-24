@@ -314,24 +314,27 @@ Using this let me generate a nice README for the spin.systems superrepo:
 
 > # spin.systems
 > 
+> # spin.systems
+> 
 > spin.systems: [`ss`](https://gitlab.com/spin.systems/spin.systems.gitlab.io)
 > 
-> - `cal`: [qu ⠶ cal](https://gitlab.com/qu-cal/qu-cal.gitlab.io)
-> - `log`: [spin ⠶ log](https://gitlab.com/spin-log/spin-log.gitlab.io)
-> - `conf`: [qu ⠶ conf](https://gitlab.com/qu-conf/qu-conf.gitlab.io)
-> - `pore`: [qu ⠶ pore](https://gitlab.com/qu-pore/qu-pore.gitlab.io)
-> - `ocu`: [spin ⠶ ocu](https://gitlab.com/naiveoculus/naiveoculus.gitlab.io)
-> - `arc`: [spin ⠶ app](https://gitlab.com/appendens/appendens.gitlab.io)
-> - `qrx`: [qu ⠶ arx](https://gitlab.com/qu-arx/qu-arx.gitlab.io)
-> - `erg`: [spin ⠶ erg](https://gitlab.com/spin-erg/spin-erg.gitlab.io)
-> - `opt`: [spin ⠶ opt](https://gitlab.com/spin-opt/spin-opt.gitlab.io)
-> - `poll`: [qu ⠶ poll](https://gitlab.com/qu-poll/qu-poll.gitlab.io)
-> - `arb`: [spin ⠶ arb](https://gitlab.com/spin-arb/spin-arb.gitlab.io)
-> - `reed`: [qu ⠶ reed](https://gitlab.com/qu-reed/qu-reed.gitlab.io)
-> - `noto`: [qu ⠶ noto](https://gitlab.com/qu-noto/qu-noto.gitlab.io)
-> - `plot`: [qu ⠶ plot](https://gitlab.com/qu-plot/qu-plot.gitlab.io)
-> - `doc`: [spin ⠶ doc](https://gitlab.com/spin-doc/spin-doc.gitlab.io)
-> - `labs`: [qu ⠶ labs](https://gitlab.com/qu-labs/qu-labs.gitlab.io)
+> - `cal`: [q ⠶ cal](https://gitlab.com/qu-cal/qu-cal.gitlab.io)
+> - `log`: [∫ ⠶ log](https://gitlab.com/spin-log/spin-log.gitlab.io)
+> - `conf`: [q ⠶ conf](https://gitlab.com/qu-conf/qu-conf.gitlab.io)
+> - `pore`: [q ⠶ biorx](https://gitlab.com/qu-pore/qu-pore.gitlab.io)
+> - `ocu`: [∫ ⠶ ocu](https://gitlab.com/naiveoculus/naiveoculus.gitlab.io)
+> - `arc`: [∫ ⠶ app](https://gitlab.com/appendens/appendens.gitlab.io)
+> - `qrx`: [q ⠶ arx](https://gitlab.com/qu-arx/qu-arx.gitlab.io)
+> - `erg`: [∫ ⠶ erg](https://gitlab.com/spin-erg/spin-erg.gitlab.io)
+> - `opt`: [∫ ⠶ opt](https://gitlab.com/spin-opt/spin-opt.gitlab.io)
+> - `poll`: [q ⠶ poll](https://gitlab.com/qu-poll/qu-poll.gitlab.io)
+> - `arb`: [∫ ⠶ arb](https://gitlab.com/spin-arb/spin-arb.gitlab.io)
+> - `reed`: [q ⠶ reed](https://gitlab.com/qu-reed/qu-reed.gitlab.io)
+> - `noto`: [q ⠶ ruinoto](https://gitlab.com/qu-noto/qu-noto.gitlab.io)
+> - `plot`: [q ⠶ plotspot](https://gitlab.com/qu-plot/qu-plot.gitlab.io)
+> - `doc`: [∫ ⠶ doc](https://gitlab.com/spin-doc/spin-doc.gitlab.io)
+> - `labs`: [q ⠶ labs](https://gitlab.com/qu-labs/qu-labs.gitlab.io)
+
 
 ## TODO
 

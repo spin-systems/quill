@@ -60,9 +60,9 @@ def parse_nodes_to_list(nodes, listconfig=None, listclass=BlockList):
     if parsed:
         yield create_BlockList(parsed, has_header, listclass, listconfig)
 
-def _as_df(self):
+def _as_df(self, forbid_header=False):
     labels = self._labels
-    nodes = self.all_nodes if self.has_sep_header else self.nodes
+    nodes = self.all_nodes if self.has_sep_header and not forbid_header else self.nodes
     datadict = {label: [getattr(node, label) for node in nodes] for label in labels}
     return DataFrame.from_dict(datadict)
 
