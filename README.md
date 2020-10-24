@@ -314,8 +314,6 @@ Using this let me generate a nice README for the spin.systems superrepo:
 
 > # spin.systems
 > 
-> # spin.systems
-> 
 > spin.systems: [`ss`](https://gitlab.com/spin.systems/spin.systems.gitlab.io)
 > 
 > - `cal`: [q ⠶ cal](https://gitlab.com/qu-cal/qu-cal.gitlab.io)
