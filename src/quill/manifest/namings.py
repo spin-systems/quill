@@ -11,3 +11,4 @@ alias_df = {l.header.alias if l.header.alias else l.header.domain: l.as_df(forbi
 for alias_ns in alias_df:
     alias_df.get(alias_ns).insert(0, "namespace", alias_ns)
 alias_df = concat([alias_df.get(alias_ns) for alias_ns in alias_df]).reset_index().drop("index", 1)
+alias_df.namespace = alias_df.namespace.astype("category")
