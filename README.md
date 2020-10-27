@@ -337,6 +337,49 @@ Using this let me generate a nice README for the spin.systems superrepo:
 > - `doc`: [∫ ⠶ doc](https://gitlab.com/spin-doc/spin-doc.gitlab.io)
 > - `labs`: [q ⠶ labs](https://gitlab.com/qu-labs/qu-labs.gitlab.io)
 
+## Addresses
+
+"Spin addresses" follow the above "{namespace}⠶{domain|alias}" format, and additionally:
+
+- Some (initially only `∫⠶log`) subdomain repos are 'deploy' stage counterparts
+  to local 'dev' stage directories.
+- Some (initially only `∫⠶log`) subdomain repos will be 'addressed' with a date
+  [and a zero-based counter for same-day entries]
+
+```py
+>>> example = "∫⠶log⠶20⠶oct⠶25⠶0"
+>>> eg_addr = ql.AddressPath(example)
+>>> eg_addr
+['∫', 'log', '20', 'oct', '25', '0']
+```
+
+The path has been parsed ("strictly" by default) into parts which are
+'typed' strings.
+
+```py
+pprint(list(map(type, eg_addr)))
+```
+⇣
+```STDOUT
+[<class 'ql.src.quill.scan.address.paths.NameSpaceString'>,
+ <class 'ql.src.quill.scan.address.paths.DomainString'>,
+ <class 'ql.src.quill.scan.address.paths.YyDigitString'>,
+ <class 'ql.src.quill.scan.address.paths.mmmString'>,
+ <class 'ql.src.quill.scan.address.paths.DdDigitString'>,
+ <class 'ql.src.quill.scan.address.paths.FileIntString'>]
+```
+
+A file path can be obtained from this using `interpret_filepath`,
+which is bound to the class as the `filepath` property:
+
+```py
+>>> eg_addr.filepath
+PosixPath('/home/louis/spin/l/20/10oct/25/0_digitalising_spin_addresses.mmd')
+>>> eg_addr.filepath.exists()
+True
+>>> ql.mmd(eg_addr.filepath)
+Parsed MMD file (Document of 4 blocks)
+```
 
 ## TODO
 
