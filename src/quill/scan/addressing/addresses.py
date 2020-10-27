@@ -89,9 +89,9 @@ class MmDigitString(DigitStringPart, MonthUtilMixin):
 
 class mmmString(AddressPart, MonthUtilMixin):
     def __init__(self, m):
-        mi = self.month_str_to_int(m)
+        mi = self.month_str_to_enum(m).value
         assert 1 <= mi <= 12, f"Expected an integer from 1 to 12, got '{mi}'"
-        self.int = int(y)  # expect e.g. "10" to indicate the month November
+        self.int = mi  # expect e.g. "10" to indicate the month November
 
     @property
     def as_enum(self):
@@ -116,8 +116,9 @@ class DdDigitString(DigitStringPart):
 # TODO: alternative DdDigitString class, for {01,02,03} rather than {1,2,3}
 
 
-class FileIntString(AddressPart):
-    pass
+class FileIntString(DigitStringPart):
+    def __init__(self, f):
+        self.int = int(f)
 
 
 class AddressParts(Enum):
