@@ -1,9 +1,12 @@
 # quill
 
-- `qu`⠶`scan`: Read `.mmd` files (using `lever`)
-- `qu`⠶`manifest`: Read `spin.systems` configuration
-- `qu`⠶`fold`: Manage `*.spin.systems` subdomains
-- `qu`⠶`address`: Read address path shorthand notation
+By convention, `import quill as ql`
+
+- `ql`⠶`scan`: Read `.mmd` files
+  - `scan`⠶`lever`: Parse `.mmd` file format
+- `ql`⠶`manifest`: Read `spin.systems` configuration
+- `ql`⠶`fold`: Manage `*.spin.systems` subdomains
+  - `fold`⠶`address`: Manage subdomain address shorthand
 
 ## Usage memo
 
@@ -20,7 +23,7 @@ as a list of colon-separated values).
 
 ```py
 >>> from pprint import pprint
->>> from qu import ssm
+>>> from ql import ssm
 >>> import pandas as pd
 >>> ssm
 Parsed MMD file (Document of 1 block, containing 1 list)
@@ -190,9 +193,9 @@ and subsequently the namespace can be `refresh`ed to reflect the new addition (t
 done automatically within the `clone` function).
 
 ```py
->>> qu.ns
+>>> ql.ns
 {}
->>> qu.clone(qu.ssm.repos_df.git_url[0], "spin.systems")
+>>> ql.clone(ql.ssm.repos_df.git_url[0], "spin.systems")
 Cloning into 'spin.systems'...
 remote: Enumerating objects: 6, done.
 remote: Counting objects: 100% (6/6), done.
@@ -200,7 +203,7 @@ remote: Compressing objects: 100% (6/6), done.
 remote: Total 236 (delta 1), reused 0 (delta 0), pack-reused 230
 Receiving objects: 100% (236/236), 34.16 KiB | 210.00 KiB/s, done.
 Resolving deltas: 100% (123/123), done.
->>> qu.ns
+>>> ql.ns
 {'spin.systems': 'https://gitlab.com/spin-systems/spin-systems.gitlab.io'}
 ```
 
@@ -208,7 +211,7 @@ Lastly, the entire manifest of repos can be sourced from `ssm` and `clone`d into
 `ns_path` directory.
 
 ```py
-qu.source_manifest()
+ql.source_manifest()
 ```
 
 For now, if the directory named as the `domain` entry of the row in the `ssm.repos_df`
@@ -217,7 +220,7 @@ table exists, it will simply not touch it. If it doesn't exist, it will try to c
 Et voila the namespace now contains all the repos (stored in the sibling `ss` directory)
 
 ```py
->>> pprint(qu.ns)
+>>> pprint(ql.ns)
 {'arb': 'https://gitlab.com/spin-arb/spin-arb.gitlab.io',
  'arc': 'https://gitlab.com/appendens/appendens.gitlab.io',
  'cal': 'https://gitlab.com/qu-cal/qu-cal.gitlab.io',
@@ -274,7 +277,7 @@ as the 'layout' for each site, checking they're valid (according to the
 [reference](https://docs.gitlab.com/ee/ci/yaml/#pages) on YAML configs for GitLab Pages)
 
 ```py
->>> manifests = qu.yaml_manifests(as_dicts=False)
+>>> manifests = ql.yaml_manifests(as_dicts=False)
 >>> for k,m in manifests.items(): print(k, end="\t"); pprint(m)
 spin.systems    SiteCI: PagesJob: {Stage.Deploy, Script <>, Artifacts: paths=['public'], Only: branch=['master']}
 cal     SiteCI: PagesJob: {Stage.Deploy, Script <>, Artifacts: paths=['public'], Only: branch=['master']}

@@ -1,8 +1,9 @@
 from ...manifest.namings import alias_df
 from enum import Enum, IntEnum
+from .routing import routing_df
+from ...fold import ns_path
 
 __all__ = ["AddressPath"]
-
 
 class AddressPart(str):
     def __new__(cls, *args, **kw):
@@ -139,9 +140,39 @@ def pop_part(part_list):
         return e
 
 
+def interpret_filepath(address_path=None):
+    if address_path is None:
+        address_path = example_path
+    elif type(address_path) is str:
+        address_path = AddressPath(address_path)
+    namespace = address_path.namespace
+    domain = address_path.domain
+    route_query = f"namespace == '{namespace}' and domain == '{domain}'"
+    #route_result = routing_df.query(route_query)
+    [route] = routing_df.query(route_query).route.values
+    #[(namespace_full, route)] = route_result.loc[:,("namespace_full", "route")].values
+    domain_filepath = (ns_path / route).resolve()
+    month = f"{address_path.month.int!r}{address_path.month.as_str}"
+    daydir = domain_filepath / address_path.year / month / address_path.day
+    assert daydir.exists() and daydir.is_dir(), f"Expected a directory at {daydir}"
+    [filepath] = [f for f in daydir.iterdir() if f.name.startswith(address_path.fileint)]
+    return filepath
+
+
 class AddressPath(list):
-    def __init__(self, address_str):
-        self.parts = SeparatedString(address_str, sep="⠶")
+    def __init__(self, address_str, sep="⠶"):
+        self.sep = sep
+        self.parts = SeparatedString(address_str, sep=sep)
+    
+    @property
+    def as_str(self, sep=None):
+        if sep is None:
+            sep = self.sep
+        return sep.join(self)
+
+    @property
+    def filepath(self):
+        return interpret_filepath(self.as_str)
 
     @property
     def parts(self):
@@ -216,7 +247,7 @@ class AddressPath(list):
                 return  # reached end of the parts list so finish parsing without error
         else:
             self.day = AddressParts.DD.value(day)
-            self.append(self.year)
+            self.append(self.day)
         if isinstance(f := pop_part(pp), IndexError):
             # 5 is a permitted number of address parts, so no need to check `strict`
             return
