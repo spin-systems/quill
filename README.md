@@ -3,6 +3,7 @@
 - `qu`⠶`scan`: Read `.mmd` files (using `lever`)
 - `qu`⠶`manifest`: Read `spin.systems` configuration
 - `qu`⠶`fold`: Manage `*.spin.systems` subdomains
+- `qu`⠶`address`: Read address path shorthand notation
 
 ## Usage memo
 
