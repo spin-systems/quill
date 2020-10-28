@@ -1,5 +1,7 @@
 from enum import Enum
 from parse import parse as fparse
+from pathlib import Path
+from yaml import dump
 
 def check_yaml(yaml_dict, keys):
     "Validate keys of the YAML dict for a GitLab Pages CI config."
@@ -32,19 +34,41 @@ class Script:
         self.cfg = {}
         self.parse(cmd_list)
 
-    template = [Cmd.Mk, {"subdirectory": Cmd.Cp}, Cmd.Mv]
+    template = [Cmd.Mk, {"subdirectory": (Cmd.Cp, Path)}, Cmd.Mv]
 
     def parse(self, commands):
         for i,c in enumerate(commands):
             t = self.template[i]
             if isinstance(t, dict):
+                # (this tuple-valued dict was kludgey and inextensible but it's fine)
                 # overwrite t with the variable command and parse against the command
+                # applying any function
                 [(custom_varname, t)] = t.items()
+                if isinstance(t, tuple):
+                    t, f = t # unpack callable function
+                else:
+                    f = None # no callable supplied
                 configured_value = fparse(t.value, c)
                 val = configured_value.fixed[0] if configured_value else None
+                if val and callable(f):
+                    val = f(val) # call the supplied function on the parsed value
                 self.cfg.update({custom_varname: val})
             else:
                 assert t.value == c
+
+    @property
+    def as_list(self):
+        cmd_list = []
+        for c in self.template:
+            if isinstance(c, dict):
+                template, _ = c.get("subdirectory")
+                subdir = self.cfg.get("subdirectory")
+                subdir_str = f"{subdir}/" if subdir else ""
+                formatted_cmd = template.value.format(subdir_str)
+                cmd_list.append(formatted_cmd)
+            else:
+                cmd_list.append(c.value)
+        return cmd_list
 
     def __repr__(self):
         if not (subdir := self.cfg.get("subdirectory")):
@@ -61,6 +85,10 @@ class Artifacts:
         paths = ["public"]
         self.paths = paths
         assert yaml_dict.get("paths") == paths, f"No artifact {paths=}"
+
+    @property
+    def as_dict(self):
+        return {"paths": self.paths}
 
     def __repr__(self):
         cls = self.__class__.__name__
@@ -86,6 +114,16 @@ class PagesJob:
         self.script = Script(yaml_dict.get("script"))
         self.artifacts = Artifacts(yaml_dict.get("artifacts"))
         self.only = Only(yaml_dict.get("only"))
+
+    @property
+    def as_dict(self):
+        d = {
+            "stage": self.stage.value,
+            "script": self.script.as_list,
+            "artifacts": self.artifacts.as_dict,
+            "only": self.only.branch
+        }
+        return d
     
     def __repr__(self):
         cls = self.__class__.__name__
@@ -108,3 +146,11 @@ class SiteCI:
     def __repr__(self):
         cls = self.__class__.__name__
         return f"{cls}: {self.pages}"
+
+    @property
+    def as_dict(self):
+        return {"pages": self.pages.as_dict}
+
+    @property
+    def as_yaml(self):
+        return dump(self.as_dict, sort_keys=False)

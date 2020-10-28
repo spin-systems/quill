@@ -9,7 +9,7 @@ def yaml2dict(yaml_path):
     with open(yaml_path, "r") as f:
         return load(f, Loader=Loader)
 
-def yaml_manifests(as_dicts=True, yaml_filename=".gitlab-ci.yml"):
+def yaml_manifests(as_dicts=False, yaml_filename=".gitlab-ci.yml"):
     """
     Clone repos as per the manifest (`qu.ssm`)
     """
