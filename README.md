@@ -365,6 +365,37 @@ Running `ssm.check_manifest()` again is required to update `ssm.repos_df`
 (this is called rather than a property since it takes a little while
 to calculate, and it'd slow down some operations which don't need it otherwise).
 
+This `repos_df` dataframe is also useful for comparing whatever
+other properties you might want to check, e.g. which have a README
+
+```py
+>>> df = ql.ssm.repos_df
+>>> df["has_README"] = ["README.md" in [x.name for x in (ql.ns_path / d).iterdir()] for d in
+>>> df.domain]
+>>> df
+          domain     repo_name priority  ... local  clean  has_README
+0   spin.systems  spin-systems        4  ...  True   True       False
+1            cal        qu-cal        3  ...  True   True       False
+2            log      spin-log        4  ...  True   True        True
+3           conf       qu-conf        4  ...  True   True        True
+4           pore       qu-pore        2  ...  True   True       False
+5            ocu   naiveoculus        4  ...  True   True       False
+6            arc     appendens        4  ...  True   True        True
+7            qrx        qu-arx        4  ...  True   True       False
+8            erg      spin-erg        1  ...  True   True       False
+9            opt      spin-opt        1  ...  True   True       False
+10          poll       qu-poll        2  ...  True   True       False
+11           arb      spin-arb        1  ...  True   True       False
+12          reed       qu-reed        3  ...  True   True       False
+13          noto       qu-noto        2  ...  True   True       False
+14          plot       qu-plot        1  ...  True   True        True
+15           doc      spin-doc        2  ...  True   True       False
+16          labs       qu-labs        1  ...  True   True       False
+```
+
+Obviously this is the kind of thing to then follow up manually,
+but it helps to have programmatic ways to view the set of directories.
+
 ## Aliases
 
 The "canonical names" displayed in the README are the aliases, which by and large
