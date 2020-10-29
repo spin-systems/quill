@@ -9,4 +9,6 @@ __all__ = [
     "clone",
     "source_manifest",
     "yaml_manifests",
+    "get_yaml_manifest",
+    "change_build_dir"
 ]

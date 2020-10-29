@@ -5,6 +5,7 @@ from .lists import parse_nodes_to_list, BlockList, SepBlockList
 from pandas import DataFrame
 from ...manifest.parsing import read_man, read_man_df
 from ...fold.ns_util import ns
+from .git import _has_clean_wt
 
 __all__ = ["Doc"]
 
@@ -103,4 +104,6 @@ class Doc(BlockDoc):
         return self._doc_repr
 
     def check_manifest(self):
-        self.repos_df["local"] = [domain in ns for domain in self.repos_df.domain]
+        domains = self.repos_df.domain
+        self.repos_df["local"] = [domain in ns for domain in domains]
+        self.repos_df["clean"] = [_has_clean_wt(d) for d in domains if d in ns]

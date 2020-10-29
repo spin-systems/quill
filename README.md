@@ -303,6 +303,68 @@ labs    SiteCI: PagesJob: {Stage.Deploy, Script <>, Artifacts: paths=['public'],
 - This setup is deliberately brittle, so any changes will need to be validated in the `fold.yaml_util` module,
   and so the library itself incorporates testing (simple `assert` statements based on a clear expected implementation)
 
+The build directory can be set with `change_build_dir`, and using this I set all of the repos to
+build from "site" (but this can be changed at a later date):
+
+```py
+for d in ql.alias_df.domain: ql.change_build_dir(d, "site")
+```
+⇣
+```STDOUT
+Moved build path for log from 'site' --> /home/louis/spin/ss/log/site
+Created build path for ocu at /home/louis/spin/ss/ocu/site
+Moved build path for arc from 'site' --> /home/louis/spin/ss/arc/site
+Created build path for erg at /home/louis/spin/ss/erg/site
+Created build path for opt at /home/louis/spin/ss/opt/site
+Created build path for arb at /home/louis/spin/ss/arb/site
+Created build path for doc at /home/louis/spin/ss/doc/site
+Created build path for cal at /home/louis/spin/ss/cal/site
+Moved build path for conf from 'docs' --> /home/louis/spin/ss/conf/site
+Created build path for pore at /home/louis/spin/ss/pore/site
+Created build path for qrx at /home/louis/spin/ss/qrx/site
+Created build path for poll at /home/louis/spin/ss/poll/site
+Created build path for reed at /home/louis/spin/ss/reed/site
+Created build path for noto at /home/louis/spin/ss/noto/site
+Created build path for plot at /home/louis/spin/ss/plot/site
+Created build path for labs at /home/louis/spin/ss/labs/site
+```
+
+To commit these changes, I added some more functions to manage the `git` repos.
+`ql.ssm.check_manifest()` now has a column referring to whether the working tree
+is clean or has changes to tracked files not staged for commit.
+
+The output will be something like this example (where the README in `arc`
+was moved):
+
+```py
+ql.fold.remote_push_manifest()
+```
+⇣
+```STDERR
+Skipping 'repo_dir=/home/louis/spin/ss/spin.systems' (working tree clean)
+Skipping 'repo_dir=/home/louis/spin/ss/cal' (working tree clean)
+Skipping 'repo_dir=/home/louis/spin/ss/log' (working tree clean)
+Skipping 'repo_dir=/home/louis/spin/ss/conf' (working tree clean)
+Skipping 'repo_dir=/home/louis/spin/ss/pore' (working tree clean)
+Skipping 'repo_dir=/home/louis/spin/ss/ocu' (working tree clean)
+Commit [repo_dir=/home/louis/spin/ss/arc] ⠶ Renamed site/README.md -> README.md
+⇢ Pushing ⠶ origin
+Skipping 'repo_dir=/home/louis/spin/ss/qrx' (working tree clean)
+Skipping 'repo_dir=/home/louis/spin/ss/erg' (working tree clean)
+Skipping 'repo_dir=/home/louis/spin/ss/opt' (working tree clean)
+Skipping 'repo_dir=/home/louis/spin/ss/poll' (working tree clean)
+Skipping 'repo_dir=/home/louis/spin/ss/arb' (working tree clean)
+Skipping 'repo_dir=/home/louis/spin/ss/reed' (working tree clean)
+Skipping 'repo_dir=/home/louis/spin/ss/noto' (working tree clean)
+Skipping 'repo_dir=/home/louis/spin/ss/plot' (working tree clean)
+Skipping 'repo_dir=/home/louis/spin/ss/doc' (working tree clean)
+Skipping 'repo_dir=/home/louis/spin/ss/labs' (working tree clean)
+```
+
+Running `ssm.check_manifest()` again is required to update `ssm.repos_df`
+(this is called rather than a property since it takes a little while
+to calculate, and it'd slow down some operations which don't need it otherwise).
+
 ## Aliases
 
 The "canonical names" displayed in the README are the aliases, which by and large
