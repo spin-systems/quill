@@ -396,6 +396,65 @@ other properties you might want to check, e.g. which have a README
 Obviously this is the kind of thing to then follow up manually,
 but it helps to have programmatic ways to view the set of directories.
 
+If after reviewing `ssm.repos_df` you want to push, you can do so
+either with an automated commit message or by passing it as the `commit_msg`
+argument to `remote_push_manifest` (which will reuse the same commit message
+if multiple repos are not clean).
+
+```py
+>>> ql.ssm.check_manifest()
+>>> ql.ssm.repos_df
+          domain     repo_name priority                                            git_url  local  clean
+0   spin.systems  spin-systems        4  git@gitlab.com:spin-systems/spin-systems.gitla...   True   True
+1            cal        qu-cal        3         git@gitlab.com:qu-cal/qu-cal.gitlab.io.git   True   True
+2            log      spin-log        4     git@gitlab.com:spin-log/spin-log.gitlab.io.git   True   True
+3           conf       qu-conf        4       git@gitlab.com:qu-conf/qu-conf.gitlab.io.git   True   True
+4           pore       qu-pore        2       git@gitlab.com:qu-pore/qu-pore.gitlab.io.git   True   True
+5            ocu   naiveoculus        4  git@gitlab.com:naiveoculus/naiveoculus.gitlab....   True   True
+6            arc     appendens        4   git@gitlab.com:appendens/appendens.gitlab.io.git   True   True
+7            qrx        qu-arx        4         git@gitlab.com:qu-arx/qu-arx.gitlab.io.git   True   True
+8            erg      spin-erg        1     git@gitlab.com:spin-erg/spin-erg.gitlab.io.git   True   True
+9            opt      spin-opt        1     git@gitlab.com:spin-opt/spin-opt.gitlab.io.git   True   True
+10          poll       qu-poll        2       git@gitlab.com:qu-poll/qu-poll.gitlab.io.git   True  False
+11           arb      spin-arb        1     git@gitlab.com:spin-arb/spin-arb.gitlab.io.git   True   True
+12          reed       qu-reed        3       git@gitlab.com:qu-reed/qu-reed.gitlab.io.git   True   True
+13          noto       qu-noto        2       git@gitlab.com:qu-noto/qu-noto.gitlab.io.git   True   True
+14          plot       qu-plot        1       git@gitlab.com:qu-plot/qu-plot.gitlab.io.git   True   True
+15           doc      spin-doc        2     git@gitlab.com:spin-doc/spin-doc.gitlab.io.git   True   True
+16          labs       qu-labs        1       git@gitlab.com:qu-labs/qu-labs.gitlab.io.git   True   True
+```
+
+E.g. here `poll` has changes locally to be pushed (I added the first draft of a parliamentary
+transcript), so I add (`all`) and push the changes to the [live website] repo
+
+- I can manually go in and check the `git diff` beforehand if I want
+
+```py
+>>> ql.fold.remote_push_manifest(commit_msg="Wiring through first transmission transcript")
+Skipping 'repo_dir=/home/louis/spin/ss/spin.systems' (working tree clean)
+Skipping 'repo_dir=/home/louis/spin/ss/cal' (working tree clean)
+Skipping 'repo_dir=/home/louis/spin/ss/log' (working tree clean)
+Skipping 'repo_dir=/home/louis/spin/ss/conf' (working tree clean)
+Skipping 'repo_dir=/home/louis/spin/ss/pore' (working tree clean)
+Skipping 'repo_dir=/home/louis/spin/ss/ocu' (working tree clean)
+Skipping 'repo_dir=/home/louis/spin/ss/arc' (working tree clean)
+Skipping 'repo_dir=/home/louis/spin/ss/qrx' (working tree clean)
+Skipping 'repo_dir=/home/louis/spin/ss/erg' (working tree clean)
+Skipping 'repo_dir=/home/louis/spin/ss/opt' (working tree clean)
+Commit [repo_dir=/home/louis/spin/ss/poll] ⠶ Wiring through first transmission transcript
+⇢ Pushing ⠶ origin
+Skipping 'repo_dir=/home/louis/spin/ss/arb' (working tree clean)
+Skipping 'repo_dir=/home/louis/spin/ss/reed' (working tree clean)
+Skipping 'repo_dir=/home/louis/spin/ss/noto' (working tree clean)
+Skipping 'repo_dir=/home/louis/spin/ss/plot' (working tree clean)
+Skipping 'repo_dir=/home/louis/spin/ss/doc' (working tree clean)
+Skipping 'repo_dir=/home/louis/spin/ss/labs' (working tree clean)
+```
+
+After which point there should be a web page under the path
+`wire/20/11/3/oral-evidence_1122.html` i.e.
+[https://poll.spin.systems/wire/20/11/3/oral-evidence_1122.html](https://poll.spin.systems/wire/20/11/3/oral-evidence_1122.html)
+
 ## Aliases
 
 The "canonical names" displayed in the README are the aliases, which by and large
