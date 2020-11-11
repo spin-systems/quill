@@ -2,6 +2,7 @@ from .ns_util import *
 from .git import *
 from .yaml_util import *
 from .man import *
+from .wire import *
 
 __all__ = [
     "ns",
