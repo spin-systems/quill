@@ -12,16 +12,16 @@ def standup():
     with open(ini_dir / ini_fn, "r") as f:
         c.read_file(f, ini_fn)
     emitters = []
-    for s in c.sections():
-        if s not in ns:
+    for domain in c.sections():
+        if domain not in ns:
             continue # skip 'DEFAULT' section
-        sect = c[s]
-        ns_p = (ns_path / s)
+        sect = c[domain]
+        ns_p = (ns_path / domain)
         assert ns_p.exists() and ns_p.is_dir(), f"{ns_p} not found"
-        for k, v in sect.items():
-            print(f"{k}-{v}")
-            directory = ns_p / k
-            e = getattr(Emitter, v).value
-            emitter = e(directory, k)
+        for name, emit_type in sect.items():
+            print(f"{name}-{emit_type}")
+            directory = ns_p / name
+            e = getattr(Emitter, emit_type).value
+            emitter = e(directory, name)
             emitters.append(emitter)
     return emitters
