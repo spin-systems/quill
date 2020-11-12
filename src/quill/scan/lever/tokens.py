@@ -22,7 +22,7 @@ def lever_config_dict():
     }
 
 
-def tokenise_line(line, seen=None, config=None):
+def tokenise_line(line, line_no, seen=None, config=None):
     """
     Follow rules for prefix and suffix token order, splitting
     the string into `(prefix, contents, suffix)`. Optionally
@@ -44,7 +44,7 @@ def tokenise_line(line, seen=None, config=None):
     seen = seen if seen else []  # avoid default mutable arg gotcha
     has_history = len(seen) > 0  # preceding tokenised line(s)
     penultimate = seen[-1] if has_history else None  # directly preceding
-    node = Node(prefix=None, contents=line, suffix=None)
+    node = Node(prefix=None, contents=line, suffix=None, line_no=line_no)
     if line == "":
         node.prefix = Prefix.BlankNode
     elif line.startswith("-:"):
@@ -175,10 +175,11 @@ class Node:
     as properties (intervening `contents` is just a string for now).
     """
 
-    def __init__(self, prefix=None, contents=None, suffix=None):
+    def __init__(self, prefix=None, contents=None, suffix=None, line_no=None):
         self.prefix = prefix
         self.contents = contents
         self.suffix = suffix
+        self.line_no = line_no
 
     def __repr__(self):
         pre = self.prefix.str if self.prefix else ""

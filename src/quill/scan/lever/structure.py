@@ -46,9 +46,10 @@ class BlockDoc:
 class NodeBlock:
     def __init__(self, block_lines, line_no, block_no):
         self._nodes = []  # private property
-        self.tokenise_lines(block_lines)  # populate nodes property
+        self.start_line = line_no - len(block_lines) + 1
         self.end_line = line_no
         self.number = block_no
+        self.tokenise_lines(block_lines)
 
     @property
     def nodes(self):
@@ -63,14 +64,16 @@ class NodeBlock:
 
     def __repr__(self):
         return (f"Block {self.number} of {self._nodecount} "
-                f"nodes to L{self.end_line}")
+                f"nodes (L{self.start_line}-L{self.end_line})")
 
     def tokenise_lines(self, block_lines):
+        "Populate nodes property"
         if block_lines[0].endswith("\n"):
             raise ValueError("Strip off newlines before passing into `NodeBlock`!")
         tokenised = []
-        for l in block_lines:
-            n = tokenise_line(l, seen=tokenised)
+        for i, l in enumerate(block_lines):
+            line_no = self.start_line + i
+            n = tokenise_line(l, line_no, seen=tokenised)
             tokenised.append(n)
         # Since preceding lines' nodes are modified in the processing
         # of subsequent lines, only add nodes to block after finishing.
