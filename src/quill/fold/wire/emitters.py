@@ -44,7 +44,8 @@ class QADocSink:
         # dumb approach, but do it for now
         date_subpath = Path(*self.date)
         emit_dir = target_dir / date_subpath
-        emit_dir.mkdir(parents=True)
+        if not emit_dir.exists():
+            emit_dir.mkdir(parents=True)
         emit_path = emit_dir / self.target
         print(f"Emitting --> {emit_path}")
         with open(emit_path, "w") as f:
