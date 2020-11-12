@@ -73,7 +73,7 @@ class NodeBlock:
         tokenised = []
         for i, l in enumerate(block_lines):
             line_no = self.start_line + i
-            n = tokenise_line(l, line_no, seen=tokenised)
+            n = tokenise_line(l, line_no, self.number, seen=tokenised)
             tokenised.append(n)
         # Since preceding lines' nodes are modified in the processing
         # of subsequent lines, only add nodes to block after finishing.

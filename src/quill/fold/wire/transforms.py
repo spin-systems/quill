@@ -45,6 +45,7 @@ class HtmlDoc:
         html.append(self.head)
         body = Tag(name="body")
         article = Tag(name="article")
+        lists = self.doc.lists.copy() # to be popped
         for b in self.doc.blocks:
             block_html = HtmlBlock(b).as_soup()
             article.append(block_html)
