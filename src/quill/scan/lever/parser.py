@@ -27,6 +27,8 @@ class Doc(BlockDoc):
         super().__init__(lines)  # block tokenisation pass, creating nodes property
         if listparseconfig is None:
             listparseconfig = {"listclass": BlockList}
+        elif listparseconfig.get("listclass") == "auto":
+            listparseconfig.update({"listclass": BlockList})
         elif "sep" in listparseconfig and "listclass" not in listparseconfig:
             # helper: do not require passing the list class itself, assume it from `sep`
             sep_listconfig_keys = ["sep", "headersep", "labels"]
@@ -47,12 +49,14 @@ class Doc(BlockDoc):
         # populate the `lists` property by parsing all blocks' nodes
         self._parse_lists(**listparseconfig) # expand out dict as named arguments
 
-    def _parse_lists(self, listclass=None, part_keys=None, listconfig=None):
+    def _parse_lists(self, listclass=None, part_keys=None, listconfig=None,
+            strict_list_breaks=True):
         """
         Note that for separator-delimited lists, `labels` (in `listconfig`) is for
         setting the names of node attributes of each delimited value, while
         `part_keys` sets column names on the pandas DataFrame.
         """
+        # TODO strict_list_breaks param
         all_blocklists = []
         for block in self.blocks:
             nodes = block.nodes

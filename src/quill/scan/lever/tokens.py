@@ -59,6 +59,8 @@ def tokenise_line(line, line_no, block_no, seen=None, config=None):
         elif ALLOW_LIST_WITHOUT_SUFFIX_INIT:
             node.prefix = Prefix.InitList
         # (Question not implemented here)
+    elif line.startswith("-?"):
+        node.prefix = Prefix.Question
     elif line.startswith("-,"):
         if line[2] == ":" and has_precedent(seen, Prefix.InitList):
             # For now consider a list 'open' indefinitely while the block is
@@ -66,6 +68,8 @@ def tokenise_line(line, line_no, block_no, seen=None, config=None):
             node.prefix = Prefix.ContList
         elif line[2] == ",":
             node.prefix = Prefix.Ascent
+        elif line[2] == "?":
+            node.prefix = Prefix.ContQuestion
         else:
             node.prefix = Prefix.FollowOn
     elif line.startswith("-."):

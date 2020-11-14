@@ -84,10 +84,10 @@ def remote_push_manifest(commit_msg=None):
             print(f"Skipping '{repo_dir=!s}' (doesn't exist)", file=stderr)
             continue  # simply do not touch for now
         repo = Repo(repo_dir)
+        repo.git.add("--all")
         if not repo.is_dirty():
             print(f"Skipping '{repo_dir=!s}' (working tree clean)", file=stderr)
             continue # repo has no changes to untracked files, skip it
-        repo.git.add("--all")
         if commit_msg is None:
             commit_msg = git_news(repo)
         if commit_msg == "":
