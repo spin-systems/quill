@@ -1,6 +1,4 @@
-from bs4 import BeautifulSoup, Tag
-from pathlib import Path
-from enum import Enum
+from bs4 import Tag
 
 __all__ = ["node_html_tag", "HtmlBlock", "HtmlDoc"]
 
@@ -58,59 +56,3 @@ class HtmlBlock:
             html_node = node_html_tag(n, self.start_line + i)
             block_div.append(html_node)
         return block_div
-
-class HtmlPage:
-    def __init__(self, content, depth_from_root):
-        self.preamble = "<!doctype html>\n"
-        self.content = content
-        self.depth = depth_from_root
-        self.head = self.css_head()
-
-    def as_str(self):
-        soup = BeautifulSoup(features="html5lib")
-        html = Tag(soup, name="html")
-        html.append(self.head)
-        body = Tag(name="body")
-        body.append(self.content)
-        html.append(body)
-        return self.preamble + html.prettify()
-
-    def css_head(self):
-        head = Tag(name="head")
-        #css_href = "../../../../styles.css"
-        css_href = str(Path(*[".."] * self.depth) / "styles.css")
-        attrs = {"rel": "stylesheet", "href": css_href}
-        style = Tag(name="link", attrs=attrs, can_be_empty_element=True)
-        head.append(style)
-        return head
-
-class HtmlDoc(HtmlPage):
-    def __init__(self, doc, depth_from_root):
-        self.preamble = "<!doctype html>\n"
-        self.doc = doc
-        self.depth = depth_from_root
-        self.head = self.css_head()
-
-    def as_str(self):
-        soup = BeautifulSoup(features="html5lib")
-        html = Tag(soup, name="html")
-        html.append(self.head)
-        body = Tag(name="body")
-        article = Tag(name="article")
-        unassigned_lists = self.doc.lists.copy()
-        for b in self.doc.blocks:
-            assignable_lists = []
-            for l in unassigned_lists:
-                first_list_line = l.all_nodes[0].line_no
-                last_block_line = b.end_line
-                if first_list_line < last_block_line:
-                    # the list is in this block
-                    assignable_lists.append(l)
-                # do stuff with the assignable lists in this block
-            block_html = HtmlBlock(b, assignable_lists).as_soup()
-            article.append(block_html)
-            for l in assignable_lists:
-                unassigned_lists.pop(0) # pop only after iterating over
-        body.append(article)
-        html.append(body)
-        return self.preamble + html.prettify()
