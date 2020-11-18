@@ -1,13 +1,15 @@
 from bs4 import Tag
 from .html_page_util import HtmlPage
 from .html_util import Attrs, PartialAttrs
-from .html_elem_util import NavLinkList
+from .html_elem_util import NavLinkList, NavHeader, BreadCrumb
+from collections.abc import Sequence
 
-__all__ = ["BaseIndexPage", "IndexNav", "IndexUl", "EmittedIndex", "IntermedDirIndex", "WireIndex"]
+__all__ = ["IndexNav", "IndexUl", "EmittedIndex", "IntermedDirIndex", "WireIndex"]
 
 class BaseIndexPage(HtmlPage):
     def __init__(self, nav, depth, head_params={}):
         self._nav_tag = nav
+        print(f"nav header: {self.nav_header}")
         super().__init__(self._index_content, depth, head_params)
 
     @property
@@ -25,51 +27,140 @@ class BaseIndexPage(HtmlPage):
 
     @property
     def _index_content(self):
-        if hasattr(self, "_nav_header"):
-            return [self._nav_header, self._nav_tag]
+        nh_div = Tag(name="div", attrs={"id": "nh"})
+        up_div = Tag(name="div", attrs={"id": "up_div"})
+        up_a = Tag(name="a", attrs={"href": ".."})
+        up_div.append(up_a)
+        nh_div.append(up_div)
+        if self.nav_header:
+            nh_div.append(self.nav_header)
+        return [nh_div, self._nav_tag]
+
+    @property
+    def nav_header(self):
+        if hasattr(self, "_nh"):
+            return self._nh
         else:
-            return self._nav_tag
+            return None
+
+    @nav_header.setter
+    def nav_header(self, h):
+        self._nh = h
+
+    @property
+    def nav_header_attrs(self):
+        if hasattr(self, "_nh_attrs"):
+            return self._nh_attrs
+        else:
+            return dict()
+
+    @nav_header_attrs.setter
+    def nav_header_attrs(self, attrs):
+        self._nh_attrs = attrs
+
+    @property
+    def breadcrumb_attrs(self):
+        if hasattr(self, "_bc_attrs"):
+            return self._bc_attrs
+        else:
+            return dict()
+
+    @breadcrumb_attrs.setter
+    def breadcrumb_attrs(self, attrs):
+        self._bc_attrs = attrs
+
 
 class IndexNav(PartialAttrs):
+    "Partially set Attrs wrapper class for index page nav elements"
     def __init__(self, attrs):
         self.default_attrs = {"class": "index"}
         super().__init__(attrs)
 
 class IndexUl(PartialAttrs):
+    "Gratuitous wrapper class (currently doing nothing but may in future)"
     def __init__(self, attrs):
         #self.default_attrs = {}
         super().__init__(attrs)
 
-class EmittedIndex(BaseIndexPage):
+class BaseWireIndexPage(BaseIndexPage):
+    "Wrapper class to set the nav header text for breadcrumbs"
+    def __init__(self, *args):
+        self.nav_header_attrs = Attrs({"id": "nav_header"})
+        self.create_header() # if subclassed, will hit the subclass method instead
+        super().__init__(*args)
+
+    def create_header(self, breadcrumbs=None):
+        if breadcrumbs is None:
+            # if un-overridden by subclass method with breadcrumbs, do nothing
+            return # i.e. must subclass to get this to run (safety mechanism!)
+        elif self.nav_header is not None:
+            return # forbid overwriting nav header by repeated call to this function
+        nh_size = 3
+        default_bc_attrs = {"crumb_sep": "⠶", "id": "crumbs"}
+        bc_attrs = {**default_bc_attrs, **self.breadcrumb_attrs}
+        crumb_sep = bc_attrs.pop("crumb_sep")
+        bc = Tag(name="ul", attrs=bc_attrs)
+        if not isinstance(breadcrumbs, Sequence):
+            #breadcrumbs = [breadcrumbs] # make trivially iterable
+            err_msg = f"{breadcrumbs} is not a Sequence (did you pass a single tag?)"
+            raise ValueError(err_msg)
+        for i,c in enumerate(breadcrumbs):
+            t = Tag(name="li")
+            if i > 0:
+                t.attrs.update({"separator": crumb_sep})
+            t.append(BreadCrumb(*c))
+            bc.append(t)
+        #self.nav_header = NavHeader(nh_size, None, nh_params, bc_params)
+        self.nav_header = NavHeader(nh_size, bc, self.nav_header_attrs)
+        print(f"Made NH: {self.nav_header}")
+
+class EmittedIndex(BaseWireIndexPage):
     def __init__(self, files, depth=4, head_params={}):
         self.head_params = head_params
         nav_params = IndexNav({"id": "file_index"})
         ul_params = IndexUl({"id": "files"})
         nav = NavLinkList(files, files, nav_params, ul_params)
-        nh_attrs = Attrs({"id": "nav_header", "class": "breadcrumbs"})
-        self._nav_header = Tag(name="h3", **nh_attrs)
-        self._nav_header.string = "file_beep_boop" # breadcrumbs go here
+        #self.nav_header_attrs = Attrs({"class": "breadcrumbs"})
+        #self.nav_header = NavHeader(3, None)
         super().__init__(nav, depth)
+        #self.nav_header.string = " ⠶ file_beep_boop" # breadcrumbs go here
+        #self.nav_header.append(" ...beep boop?")
 
-class IntermedDirIndex(BaseIndexPage):
+    def create_header(self):
+        if self.nav_header is None:
+            crumbs = [("bar",), ("baz",)]
+            super().create_header(crumbs)
+            print(f"Made NH: {self.nav_header}")
+
+class IntermedDirIndex(BaseWireIndexPage):
     def __init__(self, subdirs, depth, head_params={}):
         self.head_params = head_params
         nav_params = IndexNav({"id": "mid_index"})
         ul_params = IndexUl({"id": "index", "class": f"lvl_{depth}"})
         nav = NavLinkList(subdirs, subdirs, nav_params, ul_params)
-        nh_attrs = Attrs({"id": "nav_header", "class": "breadcrumbs"})
-        self._nav_header = Tag(name="h3", **nh_attrs)
-        self._nav_header.string = "dir_beep_boop" # breadcrumbs go here
+        #self.nav_header_attrs = Attrs({"class": "breadcrumbs bc_intermed"})
         super().__init__(nav, depth)
+        #self.nav_header.string = " ⠶ dir_beep_boop" # breadcrumbs go here
+        #self.nav_header.append(" ...beep boop?")
 
-class WireIndex(BaseIndexPage):
+    def create_header(self):
+        if self.nav_header is None:
+            crumbs = [(x,x) for x in ["foo", "bar"]]
+            super().create_header(crumbs)
+            print(f"Made NH: {self.nav_header}")
+
+class WireIndex(BaseWireIndexPage):
     def __init__(self, subdirs, depth=1, head_params={}):
         self.head_params = head_params
         nav_params = IndexNav({"id": "wire_index"})
         ul_params = Attrs({"id": "wires"})
         subdirs_as_years = [f"20{y}" for y in subdirs]
         nav = NavLinkList(subdirs_as_years, subdirs, nav_params, ul_params)
-        nh_attrs = Attrs({"id": "nav_header"})
-        self._nav_header = Tag(name="h3", **nh_attrs)
-        self._nav_header.string = "wire"
         super().__init__(nav, depth)
+        #self.nav_header.append(" ...beep boop?")
+
+    def create_header(self):
+        if self.nav_header is None:
+            crumbs = [("wire",)]
+            super().create_header(crumbs)
+            print(f"Made NH: {self.nav_header}")

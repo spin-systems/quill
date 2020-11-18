@@ -7,7 +7,7 @@ __all__ = ["CustomHtmlTag", "Attrs", "PartialAttrs"]
 class CustomHtmlTag(Tag):
     "Base class defining as_str for a bs4.Tag (may be overridden)"
     def as_str(self):
-        return self.prettify()
+        return str(self)#.prettify()
 
 class Attrs(dict):
     "For passing into bs4.Tag constructor"

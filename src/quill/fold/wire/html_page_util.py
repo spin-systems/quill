@@ -20,7 +20,7 @@ class HtmlPage:
         for c in c_tags:
             body.append(c)
         html.append(body)
-        return self.preamble + html.prettify()
+        return self.preamble + str(html)#.prettify()
 
     @property
     def _default_css_param(self):
@@ -79,4 +79,4 @@ class HtmlDoc(HtmlPage):
                 unassigned_lists.pop(0) # pop only after iterating over
         body.append(article)
         html.append(body)
-        return self.preamble + html.prettify()
+        return self.preamble + str(html)#.prettify()

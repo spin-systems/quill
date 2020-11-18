@@ -27,3 +27,27 @@ class UlLinkList(CustomHtmlTag):
 class MetaTag(Tag):
     def __init__(self, attrs):
         super().__init__(name="meta", attrs=attrs, can_be_empty_element=True)
+
+class NavHeader(CustomHtmlTag):
+    def __init__(self, size=1, breadcrumbs=None, nh_params={}):
+        default_nh_params = {"id": "nav_header"}
+        #nh_params = {**nh_params, **self.nav_header_attrs} # merge with args if provided
+        super().__init__(name=f"h{size}", **nh_params)
+        if breadcrumbs:
+            # construct it with the sep
+            self.append(breadcrumbs)
+
+class BreadCrumb(CustomHtmlTag):
+    def __init__(self, text, link=None, tagname="span", bc_params={}, link_params={}):
+        super().__init__(name=tagname, attrs={"class": "crumb"})
+        if link:
+            if "attrs" in link_params:
+                link_attrs = link_params.pop("attrs")
+            else:
+                link_attrs = {}
+            link_attrs.update({"href": link})
+            a_tag = Tag(name="a", attrs=link_attrs, **link_params)
+            a_tag.append(text)
+            self.append(a_tag)
+        else:
+            self.append(text)
