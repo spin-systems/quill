@@ -38,16 +38,12 @@ class NavHeader(CustomHtmlTag):
             self.append(breadcrumbs)
 
 class BreadCrumb(CustomHtmlTag):
-    def __init__(self, text, link=None, tagname="span", bc_params={}, link_params={}):
-        super().__init__(name=tagname, attrs={"class": "crumb"})
+    def __init__(self, text, link=None, tagname="a", link_params={}):
+        link_attrs = {"class": "crumb"}
         if link:
             if "attrs" in link_params:
-                link_attrs = link_params.pop("attrs")
-            else:
-                link_attrs = {}
+                extra_attrs = link_params.pop("attrs")
+                link_attrs = {**link_attrs, **extra_attrs}
             link_attrs.update({"href": link})
-            a_tag = Tag(name="a", attrs=link_attrs, **link_params)
-            a_tag.append(text)
-            self.append(a_tag)
-        else:
-            self.append(text)
+        super().__init__(name=tagname, attrs=link_attrs, **link_params)
+        self.append(text)

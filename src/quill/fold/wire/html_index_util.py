@@ -10,7 +10,6 @@ __all__ = ["IndexNav", "IndexUl", "EmittedIndex", "IntermedDirIndex", "WireIndex
 class BaseIndexPage(HtmlPage):
     def __init__(self, nav, head_params={}):
         self._nav_tag = nav
-        print(f"nav header: {self.nav_header}")
         super().__init__(self._index_content, self.rel_depth, head_params)
 
     @property
@@ -32,14 +31,12 @@ class BaseIndexPage(HtmlPage):
 
     @property
     def _index_content(self):
-        nh_div = Tag(name="div", attrs={"id": "nh"})
-        up_div = Tag(name="div", attrs={"id": "up_div"})
-        up_a = Tag(name="a", attrs={"href": ".."})
-        up_div.append(up_a)
-        nh_div.append(up_div)
+        nh_sec = Tag(name="section", attrs={"id": "nh"})
+        up_a = Tag(name="a", attrs={"href": "..", "id": "up_arr"})
+        nh_sec.append(up_a)
         if self.nav_header:
-            nh_div.append(self.nav_header)
-        return [nh_div, self._nav_tag]
+            nh_sec.append(self.nav_header)
+        return [nh_sec, self._nav_tag]
 
     @property
     def nav_header(self):
@@ -102,7 +99,6 @@ class BaseWireIndexPage(BaseIndexPage):
         bc_attrs = {**default_bc_attrs, **self.breadcrumb_attrs}
         crumb_sep = bc_attrs.pop("crumb_sep")
         bc = Tag(name="ul", attrs=bc_attrs)
-        print(f"create_header for {self.__class__.__name__} with {self.rel_dir}")
         breadcrumbs = []
         for i, x in enumerate(self.rel_dir.parts):
             if i == len(self.rel_dir.parts) - 1:
@@ -111,7 +107,6 @@ class BaseWireIndexPage(BaseIndexPage):
             else:
                 bc_tuple = (x, Path(*[".."] * (len(self.rel_dir.parts) - i)) / x)
             breadcrumbs.append(bc_tuple)
-        print(f"Made NH: {self.nav_header}")
         for i,c in enumerate(breadcrumbs):
             t = Tag(name="li")
             if i > 0:
@@ -119,7 +114,6 @@ class BaseWireIndexPage(BaseIndexPage):
             t.append(BreadCrumb(*c))
             bc.append(t)
         self.nav_header = NavHeader(nh_size, bc, self.nav_header_attrs)
-        print(f"Made NH: {self.nav_header}")
 
 class EmittedIndex(BaseWireIndexPage):
     def __init__(self, files, rel_dir, head_params={}):
