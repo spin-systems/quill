@@ -8,7 +8,7 @@ class HtmlPage:
     def __init__(self, content, depth_from_root, head_params={}):
         self.preamble = "<!doctype html>\n"
         self.content = content
-        self.depth = depth_from_root
+        self.depth = depth_from_root # this is duplicated in BaseIndexPage, oops...
         self.head = self.make_head(**head_params)
 
     def as_str(self):

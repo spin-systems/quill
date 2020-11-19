@@ -133,20 +133,18 @@ class WireEmitter(BaseEmitter):
             print(f"  ⇢ index files: {e_dir}")
         if files_to_log:
             # i.e. if there are direct file descendants of the directory (not just subdirs)
-            index_html_file = EmittedIndex(names_to_log).as_str()
+            index_html_file = EmittedIndex(names_to_log, e_dir).as_str()
             n_f = len(files_to_log)
-            depth = len(e_dir.parts) + 1 # wire / e_dir / index.html
             f_str = f"{n_f} file{'s' if n_f != 1 else ''}"
             if self._verbose:
                 print(f"    Writing index of {f_str} at {p}")
         else:
             if len(e_dir.parts) == 0: # i.e. the top-level path "."
                 subdirs = all_subdirs
-                index_html_file = WireIndex(subdirs).as_str()
+                index_html_file = WireIndex(subdirs, e_dir).as_str()
             else:
                 subdirs = [d.relative_to(e_dir) for d in all_subdirs if d.parent == e_dir]
-                depth = len(e_dir.parts) + 1 # wire / e_dir / index.html
-                index_html_file = IntermedDirIndex(subdirs, depth).as_str()
+                index_html_file = IntermedDirIndex(subdirs, e_dir).as_str()
             n_sd = len(subdirs)
             subdir_str = f"{n_sd} subdirector{'ies' if n_sd != 1 else 'y'}"
             if self._verbose:

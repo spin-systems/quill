@@ -1,4 +1,5 @@
 from bs4 import Tag
+from pathlib import Path
 from .html_page_util import HtmlPage
 from .html_util import Attrs, PartialAttrs
 from .html_elem_util import NavLinkList, NavHeader, BreadCrumb
@@ -7,15 +8,19 @@ from collections.abc import Sequence
 __all__ = ["IndexNav", "IndexUl", "EmittedIndex", "IntermedDirIndex", "WireIndex"]
 
 class BaseIndexPage(HtmlPage):
-    def __init__(self, nav, depth, head_params={}):
+    def __init__(self, nav, head_params={}):
         self._nav_tag = nav
         print(f"nav header: {self.nav_header}")
-        super().__init__(self._index_content, depth, head_params)
+        super().__init__(self._index_content, self.rel_depth, head_params)
 
     @property
     def _default_css_param(self):
         "Overrides HtmlPage property method of the same name, setting head styles"
         return ["styles", "index"]
+
+    @property
+    def rel_depth(self):
+        return len(self.rel_dir.parts)
 
     @property
     def head_params(self):
@@ -86,81 +91,68 @@ class BaseWireIndexPage(BaseIndexPage):
     "Wrapper class to set the nav header text for breadcrumbs"
     def __init__(self, *args):
         self.nav_header_attrs = Attrs({"id": "nav_header"})
-        self.create_header() # if subclassed, will hit the subclass method instead
+        self.create_header()
         super().__init__(*args)
 
-    def create_header(self, breadcrumbs=None):
-        if breadcrumbs is None:
-            # if un-overridden by subclass method with breadcrumbs, do nothing
-            return # i.e. must subclass to get this to run (safety mechanism!)
-        elif self.nav_header is not None:
+    def create_header(self):
+        if self.nav_header is not None:
             return # forbid overwriting nav header by repeated call to this function
         nh_size = 3
         default_bc_attrs = {"crumb_sep": "⠶", "id": "crumbs"}
         bc_attrs = {**default_bc_attrs, **self.breadcrumb_attrs}
         crumb_sep = bc_attrs.pop("crumb_sep")
         bc = Tag(name="ul", attrs=bc_attrs)
-        if not isinstance(breadcrumbs, Sequence):
-            #breadcrumbs = [breadcrumbs] # make trivially iterable
-            err_msg = f"{breadcrumbs} is not a Sequence (did you pass a single tag?)"
-            raise ValueError(err_msg)
+        print(f"create_header for {self.__class__.__name__} with {self.rel_dir}")
+        breadcrumbs = []
+        for i, x in enumerate(self.rel_dir.parts):
+            if i == len(self.rel_dir.parts) - 1:
+                # final tuple: omit link off last crumb (as it is to current page)
+                bc_tuple = (x,)
+            else:
+                bc_tuple = (x, Path(*[".."] * (len(self.rel_dir.parts) - i)) / x)
+            breadcrumbs.append(bc_tuple)
+        print(f"Made NH: {self.nav_header}")
         for i,c in enumerate(breadcrumbs):
             t = Tag(name="li")
             if i > 0:
                 t.attrs.update({"separator": crumb_sep})
             t.append(BreadCrumb(*c))
             bc.append(t)
-        #self.nav_header = NavHeader(nh_size, None, nh_params, bc_params)
         self.nav_header = NavHeader(nh_size, bc, self.nav_header_attrs)
         print(f"Made NH: {self.nav_header}")
 
 class EmittedIndex(BaseWireIndexPage):
-    def __init__(self, files, depth=4, head_params={}):
+    def __init__(self, files, rel_dir, head_params={}):
+        self.rel_dir = Path("wire") / rel_dir
         self.head_params = head_params
         nav_params = IndexNav({"id": "file_index"})
         ul_params = IndexUl({"id": "files"})
         nav = NavLinkList(files, files, nav_params, ul_params)
         #self.nav_header_attrs = Attrs({"class": "breadcrumbs"})
         #self.nav_header = NavHeader(3, None)
-        super().__init__(nav, depth)
+        super().__init__(nav)
         #self.nav_header.string = " ⠶ file_beep_boop" # breadcrumbs go here
         #self.nav_header.append(" ...beep boop?")
 
-    def create_header(self):
-        if self.nav_header is None:
-            crumbs = [("bar",), ("baz",)]
-            super().create_header(crumbs)
-            print(f"Made NH: {self.nav_header}")
-
 class IntermedDirIndex(BaseWireIndexPage):
-    def __init__(self, subdirs, depth, head_params={}):
+    def __init__(self, subdirs, rel_dir, head_params={}):
+        self.rel_dir = Path("wire") / rel_dir
         self.head_params = head_params
         nav_params = IndexNav({"id": "mid_index"})
-        ul_params = IndexUl({"id": "index", "class": f"lvl_{depth}"})
+        ul_params = IndexUl({"id": "index", "class": f"lvl_{self.rel_depth}"})
         nav = NavLinkList(subdirs, subdirs, nav_params, ul_params)
         #self.nav_header_attrs = Attrs({"class": "breadcrumbs bc_intermed"})
-        super().__init__(nav, depth)
+        super().__init__(nav)
         #self.nav_header.string = " ⠶ dir_beep_boop" # breadcrumbs go here
         #self.nav_header.append(" ...beep boop?")
 
-    def create_header(self):
-        if self.nav_header is None:
-            crumbs = [(x,x) for x in ["foo", "bar"]]
-            super().create_header(crumbs)
-            print(f"Made NH: {self.nav_header}")
-
 class WireIndex(BaseWireIndexPage):
-    def __init__(self, subdirs, depth=1, head_params={}):
+    def __init__(self, subdirs, rel_dir, head_params={}):
+        self.rel_dir = Path("wire") / rel_dir
         self.head_params = head_params
         nav_params = IndexNav({"id": "wire_index"})
         ul_params = Attrs({"id": "wires"})
         subdirs_as_years = [f"20{y}" for y in subdirs]
         nav = NavLinkList(subdirs_as_years, subdirs, nav_params, ul_params)
-        super().__init__(nav, depth)
+        super().__init__(nav)
         #self.nav_header.append(" ...beep boop?")
-
-    def create_header(self):
-        if self.nav_header is None:
-            crumbs = [("wire",)]
-            super().create_header(crumbs)
-            print(f"Made NH: {self.nav_header}")
