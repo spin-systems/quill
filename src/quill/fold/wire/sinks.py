@@ -23,7 +23,7 @@ class QADocSink:
 
     @property
     def target(self):
-        return self.src_file.rstrip(".mmd") + ".html"
+        return Path(self.src_file).stem # i.e. strip .mmd file extension
 
     def emit(self, target_dir):
         self.transform()
@@ -43,3 +43,4 @@ class DocSink(Enum):
     qa = QADocSink
     speech = QADocSink # TODO: change
     slides = QADocSink # TODO: change
+    roundtable = QADocSink # TODO: change

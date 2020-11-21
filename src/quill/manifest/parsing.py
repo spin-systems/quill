@@ -7,7 +7,7 @@ def parse_man_node(node, host="gitlab.com", hosting_at="gitlab.io"):
     are treated the same way by this function.
     """
     colsv = node.contents.split(":")[:2]
-    assert len(colsv) == 2, f"Expected 2 colon-separated values, got {len(colsv)}"
+    assert len(colsv) == 2, f"Expected 2 colon-separated values, got {len(colsv)} ({node})"
     domain, repo = colsv
     org = repo
     ref = f"git@{host}:{org}/{repo}.{hosting_at}.git"

@@ -99,7 +99,8 @@ class WireEmitter(BaseEmitter):
         self.emit_log.extend(emitted_paths) # set as empty list in __init__
 
     def _index_emissions(self):
-        all_emission_dirs = sorted(set([p.parent for p in self.emit_log]))
+        lambda_sort = lambda x: [int(str(p)) if str(p).isnumeric() else str(p) for p in x.parts]
+        all_emission_dirs = sorted(set([p.parent for p in self.emit_log]), key=lambda_sort)
         if self._verbose:
             print("Emit dirs:\n  " + "\n  ".join([str(x) for x in all_emission_dirs]), file=stderr)
         rel_dirs = [d.relative_to(self.target_dir) for d in all_emission_dirs]
@@ -127,7 +128,7 @@ class WireEmitter(BaseEmitter):
         if len(e_dir.parts) == 0: # i.e. the top-level path "."
             files_to_log = []
         else:
-            files_to_log = sorted([e for e in self.emit_log if e.parent == full_e_dir])
+            files_to_log = [e for e in self.emit_log if e.parent == full_e_dir]
             names_to_log = [p.relative_to(full_e_dir) for p in files_to_log]
         if self._verbose:
             print(f"  ⇢ index files: {e_dir}")

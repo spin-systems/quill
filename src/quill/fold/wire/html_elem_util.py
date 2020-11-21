@@ -6,21 +6,27 @@ __all__ = ["NavLinkList", "UlLinkList", "MetaTag"]
 ###### Utility classes for specific tags
 
 class NavLinkList(CustomHtmlTag):
-    def __init__(self, titles, links, nav_params={}, ul_params={}):
+    def __init__(self, titles, links, nav_params={}, ul_params={}, link_params={}):
         super().__init__(name="nav", **nav_params)
-        ul = UlLinkList(titles, links, ul_params=ul_params)
+        ul = UlLinkList(titles, links, ul_params=ul_params, link_params=link_params)
         self.append(ul)
 
 class UlLinkList(CustomHtmlTag):
-    def __init__(self, titles, links, ul_params={}):
+    def __init__(self, titles, links, ul_params={}, link_params={}):
         self.titles = titles
         self.links = links
         super().__init__(name="ul", **ul_params)
         li_tags = []
+        if "attrs" in link_params:
+            extra_attrs = link_params.pop("attrs")
+        else:
+            extra_attrs = {}
         for t,l in zip(self.titles, self.links):
             li_tag = Tag(name="li")
-            a_tag = Tag(name="a", attrs={"href": l}) # coerces to string
-            a_tag.append(f"{t}") # needs coercing to string
+            # note that here the href link is coerced to string automatically
+            link_attrs = {"href": l, **extra_attrs}
+            a_tag = Tag(name="a", attrs=link_attrs, **link_params)
+            a_tag.append(t) # the contents here can be string or a nested tag passed in
             li_tag.append(a_tag)
             self.append(li_tag)
 

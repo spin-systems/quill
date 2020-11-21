@@ -87,7 +87,7 @@ class IndexUl(PartialAttrs):
 class BaseWireIndexPage(BaseIndexPage):
     "Wrapper class to set the nav header text for breadcrumbs"
     def __init__(self, *args):
-        self.nav_header_attrs = Attrs({"id": "nav_header"})
+        self.nav_header_attrs = Attrs({"id": "nav_header", "depth": f"{self.rel_depth}"})
         self.create_header()
         super().__init__(*args)
 
@@ -121,12 +121,16 @@ class EmittedIndex(BaseWireIndexPage):
         self.head_params = head_params
         nav_params = IndexNav({"id": "file_index"})
         ul_params = IndexUl({"id": "files"})
-        nav = NavLinkList(files, files, nav_params, ul_params)
-        #self.nav_header_attrs = Attrs({"class": "breadcrumbs"})
-        #self.nav_header = NavHeader(3, None)
+        filenames = list(map(self.process_filename, files))
+        nav = NavLinkList(filenames, files, nav_params, ul_params)
         super().__init__(nav)
-        #self.nav_header.string = " ⠶ file_beep_boop" # breadcrumbs go here
-        #self.nav_header.append(" ...beep boop?")
+
+    @staticmethod
+    def process_filename(f):
+        fstr = str(f)
+        if any(fstr.startswith(f"{d}") for d in range(10)):
+            pass
+        return fstr.replace("_", " ").replace("-", " ")
 
 class IntermedDirIndex(BaseWireIndexPage):
     def __init__(self, subdirs, rel_dir, head_params={}):
@@ -134,11 +138,16 @@ class IntermedDirIndex(BaseWireIndexPage):
         self.head_params = head_params
         nav_params = IndexNav({"id": "mid_index"})
         ul_params = IndexUl({"id": "index", "class": f"lvl_{self.rel_depth}"})
-        nav = NavLinkList(subdirs, subdirs, nav_params, ul_params)
+        dirnames = list(map(self.process_dirname, subdirs))
+        nav = NavLinkList(dirnames, subdirs, nav_params, ul_params)
         #self.nav_header_attrs = Attrs({"class": "breadcrumbs bc_intermed"})
         super().__init__(nav)
         #self.nav_header.string = " ⠶ dir_beep_boop" # breadcrumbs go here
         #self.nav_header.append(" ...beep boop?")
+
+    @staticmethod
+    def process_dirname(d):
+        return str(d)
 
 class WireIndex(BaseWireIndexPage):
     def __init__(self, subdirs, rel_dir, head_params={}):
@@ -146,7 +155,13 @@ class WireIndex(BaseWireIndexPage):
         self.head_params = head_params
         nav_params = IndexNav({"id": "wire_index"})
         ul_params = Attrs({"id": "wires"})
-        subdirs_as_years = [f"20{y}" for y in subdirs]
-        nav = NavLinkList(subdirs_as_years, subdirs, nav_params, ul_params)
+        link_params = Attrs({"class": "wirelink"})
+        dirnames = list(map(self.process_dirname, subdirs))
+        nav = NavLinkList(dirnames, subdirs, nav_params, ul_params, link_params)
         super().__init__(nav)
         #self.nav_header.append(" ...beep boop?")
+
+    @staticmethod
+    def process_dirname(d):
+        "Prefix the year shortname with 20 to indicate the full year"
+        return f"20{d}"
