@@ -11,7 +11,7 @@ from .html_index_util import EmittedIndex, IntermedDirIndex, WireIndex
 from .sinks import DocSink
 from ..yaml_util import get_yaml_manifest
 from ..ns_util import ns_path
-from .....__share__ import alphanum2num_monthdict
+from ...__share__ import alphanum2num_monthdict
 from bs4 import Tag
 
 __all__ = ["BaseEmitter", "Emitter"]

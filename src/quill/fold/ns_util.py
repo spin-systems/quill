@@ -1,4 +1,4 @@
-from ....__share__ import ql_path
+from ..__share__ import ql_path
 from configparser import ConfigParser
 from .subdomain import parse_subdomain_url
 
