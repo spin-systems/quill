@@ -1,6 +1,6 @@
-__all__ = ["create_ns_alias_file", "create_routing_table", "create_manifest_file"]
+__all__ = ["create_ns_aliases", "create_routing_table", "create_manifest"]
 
-def create_ns_alias_file(par):
+def create_ns_aliases(par):
     file_path = par / "alias.mmd"
     lines = [
         "-spin.systems=ss",
@@ -58,7 +58,7 @@ def create_routing_table(par):
         f.write("\n".join(lines))
 
 
-def create_manifest_file(par):
+def create_manifest(par):
     file_path = par / "manifest.mmd"
     lines = [
         "-spin.systems:spin-systems:4:",
