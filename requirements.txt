@@ -3,3 +3,4 @@ parse
 pyyaml
 gitpython
 bs4
+html5lib
