@@ -15,6 +15,9 @@ def resolve_ns_path(qp=ql_path, ini_fn="spin.ini"):
 
 def read_ns(qp=ql_path, ini_fn="spin.ini"):
     ns_p = resolve_ns_path(ql_path, ini_fn)
+    if not ns_p.exists():
+        msg = f"No directory at {ns_p}. Please download spin systems."
+        raise FileNotFoundError(msg)
     ns_subdirs = [d.name for d in ns_p.iterdir() if d.is_dir()]
     ns = {k: parse_subdomain_url(ns_p, k) for k in ns_subdirs}
     return ns

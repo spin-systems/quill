@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 with open("requirements.txt", "r") as fh:
-    reqs = [r.rstrip("\n") for r in fh.readlines()]
+    reqs = fh.read().splitlines()
 
 def local_scheme(version):
     return ""
