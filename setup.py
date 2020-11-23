@@ -3,9 +3,15 @@ from setuptools import setup, find_packages
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
+def local_scheme(version):
+    return ""
+
+def version_scheme(version):
+    v = ".".join([version.tag.base_version, str(version.distance)])
+    return v
+
 setup(
-    name="quill",
-    version="0.0.7",
+    name="ql",
     author="Louis Maddox",
     author_email="louismmx@gmail.com",
     description="spin.systems generator and driver",
@@ -21,5 +27,10 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Intended Audience :: Developers",
     ],
+    use_scm_version={
+        "version_scheme": version_scheme,
+        "local_scheme": local_scheme,
+    },
+    setup_requires=["setuptools_scm"],
     python_requires=">=3",
 )

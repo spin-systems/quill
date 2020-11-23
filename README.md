@@ -7,6 +7,7 @@ By convention, `import quill as ql`
 - `ql`⠶`manifest`: Read `spin.systems` configuration
 - `ql`⠶`fold`: Manage `*.spin.systems` subdomains
   - `fold`⠶`address`: Manage subdomain address shorthand
+  - `fold`⠶`wire`: Emit HTML websites from `.mmd` files
 
 ## Usage memo
 
@@ -454,6 +455,10 @@ Skipping 'repo_dir=/home/louis/spin/ss/labs' (working tree clean)
 After which point there should be a web page under the path
 `wire/20/11/3/oral-evidence_1122.html` i.e.
 [https://poll.spin.systems/wire/20/11/3/oral-evidence_1122.html](https://poll.spin.systems/wire/20/11/3/oral-evidence_1122.html)
+
+To build all sites with a wire config, run `ql.wire.standup()`.
+
+Then to push the sites 'live', run `ql.fold.remote_push_manifest("Commit message goes here")`.
 
 ## Aliases
 
