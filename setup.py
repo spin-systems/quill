@@ -28,6 +28,7 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Intended Audience :: Developers",
     ],
+    include_package_data=True,
     use_scm_version={
         "version_scheme": version_scheme,
         "local_scheme": local_scheme,
