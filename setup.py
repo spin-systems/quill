@@ -34,6 +34,7 @@ setup(
     ],
     include_package_data=True,
     use_scm_version={
+        "write_to": "version.py",
         "version_scheme": version_scheme,
         "local_scheme": local_scheme,
     },
