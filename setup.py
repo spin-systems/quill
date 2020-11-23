@@ -3,6 +3,9 @@ from setuptools import setup, find_packages
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
+with open("requirements.txt", "r") as fh:
+    reqs = [r.rstrip("\n") for r in fh.readlines()]
+
 def local_scheme(version):
     return ""
 
@@ -34,5 +37,6 @@ setup(
         "local_scheme": local_scheme,
     },
     setup_requires=["setuptools_scm"],
+    install_requires=reqs,
     python_requires=">=3",
 )
