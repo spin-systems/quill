@@ -11,7 +11,8 @@ def local_scheme(version):
 
 def version_scheme(version):
     dist = version.distance
-    v = ".".join([version.tag.base_version, str(dist)])
+    d = str(dist) if dist else "0"
+    v = ".".join([version.tag.base_version, d])
     return v
 
 setup(
