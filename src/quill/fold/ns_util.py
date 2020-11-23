@@ -1,6 +1,7 @@
 from ..__share__ import ql_path
 from configparser import ConfigParser
 from .subdomain import parse_subdomain_url
+from .distrib_setup import create_ns_alias_file
 from pathlib import Path
 from sys import stderr
 
@@ -25,6 +26,7 @@ def resolve_ns_path(qp=ql_path, ini_fn="spin.ini"):
         ns_p = home_spin / dir_name
         if not ns_p.exists():
             ns_p.mkdir(parents=True)
+            create_ns_alias_file(ns_p)
     return ns_p
 
 def read_ns(qp=ql_path, ini_fn="spin.ini"):
