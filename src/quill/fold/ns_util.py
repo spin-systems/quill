@@ -28,6 +28,7 @@ def resolve_ns_path(qp=ql_path, ini_fn="spin.ini"):
             ns_p.mkdir(parents=True)
             create_ns_alias_file(ns_p)
             create_routing_table(ns_p)
+            create_manifest_file(ns_p)
     return ns_p
 
 def read_ns(qp=ql_path, ini_fn="spin.ini"):
