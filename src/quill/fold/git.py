@@ -4,7 +4,7 @@ from ..manifest.man import ssm
 from sys import stderr
 from git import Repo
 
-__all__ = ["clone", "source_manifest", "git_news", "remote_push_manifest"]
+__all__ = ["clone", "source_manifest", "git_news", "remote_push_manifest", "remote_pull_manifest"]
 
 
 def clone(url, as_name=None, wd=ns_path, update_man=True):
@@ -99,5 +99,28 @@ def remote_push_manifest(commit_msg=None):
             origin = repo.remote(name="origin")
             origin.push() # returned Push object does not seem to store useful info
             print(f"⇢ Pushing ⠶ {origin.name}", file=stderr)
+    ssm.check_manifest()
+    return
+
+def remote_pull_manifest():
+    """
+    Run `git pull` on each repo in the manifest (`qu.ssm`),
+    i.e. apex and all subdomains.
+    
+    No merge method is specified (unclear whether this will be necessary).
+
+    See here if there are problems:
+    https://stackoverflow.com/questions/36891470/how-to-pull-with-gitpython
+    """
+    for domain in ssm.repos_df.domain:
+        print(f"Examining {domain}...", file=stderr)
+        repo_dir = ns_path / domain
+        if not repo_dir.exists():
+            print(f"Skipping '{repo_dir=!s}' (doesn't exist)", file=stderr)
+            continue  # simply do not touch for now
+        repo = Repo(repo_dir)
+        origin = repo.remote(name="origin")
+        origin.pull() # not checked if returned Pull object stores useful info
+        print(f"⇢ Pulling ⠶ {origin.name}", file=stderr)
     ssm.check_manifest()
     return
