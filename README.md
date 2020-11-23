@@ -540,10 +540,6 @@ Parsed MMD file (Document of 4 blocks)
 
 ## TODO
 
-- I would also like to keep track of the `git status` of each repo in the same repo
-  - This requires `repos_df` to have the `local` column, which is added (or ensured) upon calling
-    the `ssm.check_manifest` method (as done at the end of  `fold`⠶`git`⠶`yaml_util`⠶`source_manifest`,
-    after [potentially] cloning modules locally)
 - A next step could be a class representing the state of the websites [beyond CI], which can
   then be cross-referenced against the `repos_df` (but the goal is not to entirely Python-ise
   the site development, just the management of key aspects to do with the version control on disk)
