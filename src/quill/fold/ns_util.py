@@ -5,7 +5,7 @@ from pathlib import Path
 
 __all__ = ["ns", "ns_path"]
 
-def create_ns_path(under, ini_fn="spin.ini"):
+def create_ns_path(under, qp=ql_path, ini_fn="spin.ini"):
     c = ConfigParser()
     with open(qp / ini_fn, "r") as f:
         c.read_file(f, ini_fn)
