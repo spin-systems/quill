@@ -540,7 +540,8 @@ Parsed MMD file (Document of 4 blocks)
 
 ## TODO
 
-- A next step could be a class representing the state of the websites [beyond CI], which can
+- [ ] A next step could be a class representing the state of the websites [beyond CI], which can
   then be cross-referenced against the `repos_df` (but the goal is not to entirely Python-ise
   the site development, just the management of key aspects to do with the version control on disk)
-- Make a pip installable binary wheel (bdist not currently working with SCM, just sdist)
+- [x] Make a pip installable binary wheel (bdist not currently working with SCM, just sdist)
+- [ ] Make package capable of downloading missing data files in the event it is being distributed
