@@ -102,7 +102,7 @@ def remote_push_manifest(commit_msg=None):
     ssm.check_manifest()
     return
 
-def remote_pull_manifest():
+def remote_pull_manifest(specific_domains=None):
     """
     Run `git pull` on each repo in the manifest (`qu.ssm`),
     i.e. apex and all subdomains.
@@ -112,6 +112,15 @@ def remote_pull_manifest():
     See here if there are problems:
     https://stackoverflow.com/questions/36891470/how-to-pull-with-gitpython
     """
+    if specific_domains is None:
+        domains = ssm.repos_df.domain
+    else:
+        if type(specific_domains) is list:
+            domains = specific_domains
+        elif type(specific_domains) is str:
+            domains = [specific_domains]
+        else:
+            raise TypeError(f"Unexpected type for {specific_domains=}")
     for domain in ssm.repos_df.domain:
         print(f"Examining {domain}...", file=stderr)
         repo_dir = ns_path / domain
