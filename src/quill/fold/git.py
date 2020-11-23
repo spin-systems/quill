@@ -71,14 +71,23 @@ def git_news(repo, abbreviate_at=2):
     return news
 
 
-def remote_push_manifest(commit_msg=None):
+def remote_push_manifest(commit_msg=None, specific_domains=None):
     """
     Run `git add --all` on each repo in the manifest (`qu.ssm`),
     i.e. apex and all subdomains, then `git commit -m "..."`
     where `...` is replaced by `commit_msg` or auto-generated
     if no commit is available.
     """
-    for domain in ssm.repos_df.domain:
+    if specific_domains is None:
+        domains = ssm.repos_df.domain
+    else:
+        if type(specific_domains) is list:
+            domains = specific_domains
+        elif type(specific_domains) is str:
+            domains = [specific_domains]
+        else:
+            raise TypeError(f"Unexpected type for {specific_domains=}")
+    for domain in domains:
         repo_dir = ns_path / domain
         if not repo_dir.exists():
             print(f"Skipping '{repo_dir=!s}' (doesn't exist)", file=stderr)
@@ -121,7 +130,7 @@ def remote_pull_manifest(specific_domains=None):
             domains = [specific_domains]
         else:
             raise TypeError(f"Unexpected type for {specific_domains=}")
-    for domain in ssm.repos_df.domain:
+    for domain in domains:
         print(f"Examining {domain}...", file=stderr)
         repo_dir = ns_path / domain
         if not repo_dir.exists():
