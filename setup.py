@@ -10,10 +10,7 @@ def local_scheme(version):
     return ""
 
 def version_scheme(version):
-    dist = version.distance
-    d = str(dist) if dist else "0"
-    v = ".".join([version.tag.base_version, d])
-    return v
+    return version.tag.base_version
 
 setup(
     name="ql",
