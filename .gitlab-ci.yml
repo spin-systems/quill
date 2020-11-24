@@ -2,8 +2,13 @@ image: "python:3.8"
 
 before_script:
   - eval "$(ssh-agent -s)"
+    # Following: https://serverfault.com/questions/856194/securely-add-a-host-e-g-github-to-the-ssh-known-hosts-file
+  - GITLAB_FINGERPRINT=$(ssh-keyscan -t ed25519 gitlab.com | tee gitlab-key-temp | ssh-keygen -lf -)
+  - GITLAB_EXPECTED_FINGERPRINT="256 SHA256:eUXGGm1YGsMAS7vkcx6JOJdOGHPem5gQp4taiCfCLB8 gitlab.com (ED25519)"
+  - if [ ! "$GITLAB_FINGERPRINT" = "$GITLAB_EXPECTED_FINGERPRINT" ]; then echo "Error: SSH fingerprint mismatch" 1>&2 && exit 25519; fi
+  - cat gitlab-key-temp >> ~/.ssh/known_hosts
   - ssh-add <(echo "${SSH_priv_key_GitLab}" | base64 --decode)
-    #- ssh-add <(echo "${SSH_priv_key_GitHub}" | base64 --decode)
+  - ssh-add <(echo "${SSH_priv_key_GitHub}" | base64 --decode)
   - git config --global user.email "${git_email}"
   - git config --global user.name "${full_name}"
   - python3.8 -m pip install -r requirements.txt
