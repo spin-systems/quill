@@ -1,0 +1,13 @@
+image: "python:3.8"
+
+before_script:
+  - python3.8 -m pip install -r requirements.txt
+
+stages:
+  - QL
+
+quill:
+  stage: QL
+  script:
+  - python3.8 -m pip install "ql"
+  - python3.8 -c "import quill as ql; ql.source_manifest(); ql.fold.wire.standup(); ql.remote_push_manifest('Testing this out...')"
