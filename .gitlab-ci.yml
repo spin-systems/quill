@@ -2,7 +2,7 @@ image: "python:3.8"
 
 before_script:
   - eval "$(ssh-agent -s)"
-  - ssh-add - <<<"${SSH_priv_key}"
+  - ssh-add - <(echo "${SSH_priv_key}" | base64 --decode)
   - git config --global user.email "${git_email}"
   - git config --global user.name "${full_name}"
   - python3.8 -m pip install -r requirements.txt
