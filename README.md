@@ -1,6 +1,23 @@
 # quill
 
-By convention, `import quill as ql`
+Quill is the "driver" for [spin.systems](https://spin.systems),
+and packaged on PyPi as [ql](https://pypi.org/project/ql/).
+
+A more detailed description of the package namespace can be found below,
+but for everyday usage the commands needed are:
+
+```py
+import quill as ql
+ql.ssm.check_manifest() # Check all component repos' status
+ql.ssm.repos_df # print the summary dataframe
+ql.remote_push_manifest() # Add/commit/push any dirty repos, triggering CI build
+```
+
+The last step is dependent on the manifest being updated: if changes are made, you need to
+re-run `check_manifest` to update `ssm` ("spin.systems manifest"). This ensures that changes
+do not 'go live' to the site unintentionally.
+
+## Structure
 
 - `ql`⠶`scan`: Read `.mmd` files
   - `scan`⠶`lever`: Parse `.mmd` file format
@@ -24,7 +41,7 @@ as a list of colon-separated values).
 
 ```py
 >>> from pprint import pprint
->>> from ql import ssm
+>>> from quill import ssm
 >>> import pandas as pd
 >>> ssm
 Parsed MMD file (Document of 1 block, containing 1 list)
