@@ -575,6 +575,20 @@ True
 Parsed MMD file (Document of 4 blocks)
 ```
 
+This comes in handy when building components of the spin.systems site such as
+[`tap`](https://github.com/lmmx/tap) which can then build parts for a particular domain
+with
+
+```py
+>>> eg_addr = ql.AddressPath.from_parts(domain="poll", ymd=(2021, 2, 17))
+>>> eg_addr.filepath
+PosixPath('/home/louis/spin/ss/poll/transmission/21/02feb/17')
+```
+
+This gives a simple date-based interface obeying the storage structure of quill,
+though unlike files, paths to directories in this way may not exist
+(instead they can be created as needed).
+
 ## TODO
 
 - [ ] A next step could be a class representing the state of the websites [beyond CI], which can

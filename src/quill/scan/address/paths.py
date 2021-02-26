@@ -155,6 +155,12 @@ def interpret_filepath(address_path=None):
     has_y, has_m, has_d, has_f = [
         hasattr(address_path, attrib) for attrib in "year month day fileint".split()
     ]
+    # Delayed to avoid circular import
+    from ...fold.wire import standup
+    standup_config = standup(domains_list=[domain], dry_config=True, verbose=False)
+    if domain in standup_config:
+        # The domain is being served, so get the directory from which it is served
+        domain_filepath = standup_config.get(domain).get("directory")
     if has_y:
         yeardir = domain_filepath / address_path.year
         if has_m:
