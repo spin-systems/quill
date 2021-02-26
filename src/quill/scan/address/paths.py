@@ -149,14 +149,34 @@ def interpret_filepath(address_path=None):
     domain = address_path.domain
     route_query = f"namespace == '{namespace}' and domain == '{domain}'"
     #route_result = routing_df.query(route_query)
-    [route] = routing_df.query(route_query).route.values
-    #[(namespace_full, route)] = route_result.loc[:,("namespace_full", "route")].values
+    custom_route = routing_df.query(route_query).route.item()
+    route = custom_route if custom_route else domain
     domain_filepath = (ns_path / route).resolve()
-    month = f"{address_path.month.int!r}{address_path.month.as_str}"
-    daydir = domain_filepath / address_path.year / month / address_path.day
-    assert daydir.exists() and daydir.is_dir(), f"Expected a directory at {daydir}"
-    [filepath] = [f for f in daydir.iterdir() if f.name.startswith(address_path.fileint)]
-    return filepath
+    has_y, has_m, has_d, has_f = [
+        hasattr(address_path, attrib) for attrib in "year month day fileint".split()
+    ]
+    if has_y:
+        yeardir = domain_filepath / address_path.year
+        if has_m:
+            month_str = f"{address_path.month.int:02d}{address_path.month.as_str}"
+            monthdir = yeardir / month_str
+            if has_d:
+                daydir = monthdir / address_path.day
+                if has_f:
+                    if daydir.is_dir():
+                        # Will raise StopIteration exception if glob comes back empty
+                        p = next(daydir.glob(f"{address_path.fileint}*"))
+                    else:
+                        raise FileNotFoundError(f"Expected a directory at {daydir}")
+                else:
+                    p = daydir
+            else:
+                p = monthdir
+        else:
+            p = yeardir
+    else:
+        p = domain_filepath
+    return p
 
 
 class AddressPath(list):
@@ -260,6 +280,19 @@ class AddressPath(list):
             self.extend(pp)  # just... add extra to path untyped? ¯\_(ツ)_/¯
         return
 
+    @classmethod
+    def from_parts(cls, domain, ymd=None, n=None, sep="⠶"):
+        ns = alias_df[alias_df.domain.eq(domain)].namespace.item()
+        path_parts = [ns, domain]
+        if ymd:
+            y, m, d = map(str, ymd)
+            y = y[-2:]
+            m = m.zfill(2)
+            d = d.zfill(2)
+            path_parts.extend([y, m, d])
+        if n:
+            path_parts.append(str(n))
+        return cls(sep.join(path_parts))
 
 class SeparatedString(list):
     def __init__(self, sep_str, sep):
