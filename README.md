@@ -475,6 +475,26 @@ After which point there should be a web page under the path
 
 To build all sites with a wire config, run `ql.wire.standup()`.
 
+<details><summary>More details</summary>
+
+<p>
+
+In fact, `standup` returns a dictionary of the domains, though for now
+only one domain is in use with wires.
+
+```py
+emitters = ql.fold.wire.standup(verbose=False)
+emitters
+```
+⇣
+```STDOUT
+{'poll': <quill.fold.wire.emitters.WireEmitter object at 0x7f304980eb20>}
+```
+
+</p>
+
+</details>
+
 Then to push the sites 'live', run `ql.fold.remote_push_manifest("Commit message goes here")`.
 
 ## Aliases

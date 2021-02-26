@@ -10,7 +10,6 @@ from .html_util import Attrs, PartialAttrs, CustomHtmlTag
 from .html_index_util import EmittedIndex, IntermedDirIndex, WireIndex
 from .sinks import DocSink
 from ..yaml_util import get_yaml_manifest
-from ..ns_util import ns_path
 from ...__share__ import alphanum2num_monthdict
 from bs4 import Tag
 
@@ -42,7 +41,11 @@ def match_date_parts(path_parts):
     raise ValueError(f"No alphanumeric month-containing date found in '{path_parts}'")
 
 class Wire:
-    def __init__(self, filepath):
+    """
+    `Wire` objects are created as `WireEmitter._Wires` in a listcomp
+    within the method `WireEmitter.procure_documents`.
+    """
+    def __init__(self, filepath, verbose=False):
         self.date = match_date_parts(filepath.parts)
         self.source = mmd(filepath)
         self.source_dir = filepath.parent
@@ -55,12 +58,14 @@ class Wire:
             # Enum wrapper to template class: select the class from template string
             sink_func = getattr(DocSink, template).value
             # positional arg partial func: different files share same source directory
-            # TODO: add sink verbosity control via partial named (not positional) arg
-            pfunc = partial(sink_func, self.date, self.source_dir)
-            templated_sinks = list(map(pfunc, source_files))
+            make_sink = partial(sink_func, self.date, self.source_dir, verbose=verbose)
+            templated_sinks = list(map(make_sink, source_files))
             self.sinks.extend(templated_sinks)
 
 class WireEmitter(BaseEmitter):
+    """
+    The `.sink`s on the `._Wire`s are the `.docs`, emitted upon `._trigger()`.
+    """
     def __init__(self, directory, name, verbose=False):
         self._verbose = verbose
         if self._verbose:
@@ -86,7 +91,7 @@ class WireEmitter(BaseEmitter):
             for p in dirs:
                 print("  " + str(p), file=stderr)
         self.wires = [(p / wire) for p in dirs]
-        self._Wires = [Wire(w) for w in self.wires]
+        self._Wires = [Wire(w, verbose=self._verbose) for w in self.wires]
         self.docs = list(chain.from_iterable([w.sinks for w in self._Wires]))
 
     def _trigger(self):
