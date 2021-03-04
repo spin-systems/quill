@@ -10,6 +10,7 @@ but for everyday usage the commands needed are:
 import quill as ql
 ql.ssm.check_manifest() # Check all component repos' status
 ql.ssm.repos_df # print the summary dataframe
+ql.fold.wire.standup() # build or rebuild any wire MMD documents as HTML pages
 ql.remote_push_manifest() # Add/commit/push any dirty repos, triggering CI build
 ```
 
@@ -355,7 +356,7 @@ The output will be something like this example (where the README in `arc`
 was moved):
 
 ```py
-ql.fold.remote_push_manifest()
+ql.remote_push_manifest()
 ```
 ⇣
 ```STDERR
@@ -448,7 +449,7 @@ transcript), so I add (`all`) and push the changes to the [live website] repo
 - I can manually go in and check the `git diff` beforehand if I want
 
 ```py
->>> ql.fold.remote_push_manifest(commit_msg="Wiring through first transmission transcript")
+>>> ql.remote_push_manifest(commit_msg="Wiring through first transmission transcript")
 Skipping 'repo_dir=/home/louis/spin/ss/spin.systems' (working tree clean)
 Skipping 'repo_dir=/home/louis/spin/ss/cal' (working tree clean)
 Skipping 'repo_dir=/home/louis/spin/ss/log' (working tree clean)
@@ -473,7 +474,7 @@ After which point there should be a web page under the path
 `wire/20/11/3/oral-evidence_1122.html` i.e.
 [https://poll.spin.systems/wire/20/11/3/oral-evidence_1122.html](https://poll.spin.systems/wire/20/11/3/oral-evidence_1122.html)
 
-To build all sites with a wire config, run `ql.wire.standup()`.
+To build all sites with a wire config, run `ql.fold.wire.standup()`.
 
 <details><summary>More details</summary>
 
@@ -495,7 +496,7 @@ emitters
 
 </details>
 
-Then to push the sites 'live', run `ql.fold.remote_push_manifest("Commit message goes here")`.
+Then to push the sites 'live', run `ql.remote_push_manifest("Commit message goes here")`.
 
 ## Aliases
 

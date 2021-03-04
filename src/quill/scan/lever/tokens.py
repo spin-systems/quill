@@ -1,4 +1,4 @@
-from enum import Enum
+from aenum import NamedConstant
 from ...__share__ import classproperty
 
 __all__ = ["tokenise_line", "Prefix", "Suffix", "Node"]
@@ -9,7 +9,7 @@ def has_precedent(seen, prefix):
     No need to do this for suffixes as their precedent only ever checked
     for directly preceding.
     """
-    return any([n.prefix == prefix for n in seen])
+    return any([n.prefix is prefix for n in seen])
 
 
 def lever_config_dict():
@@ -42,8 +42,7 @@ def tokenise_line(line, line_no, block_no, seen=None, config=None):
     ALLOW_LIST_WITHOUT_SUFFIX_INIT = config.get("ALLOW_LIST_WITHOUT_SUFFIX_INIT")
     ############# End config instantation #############
     seen = seen if seen else []  # avoid default mutable arg gotcha
-    has_history = len(seen) > 0  # preceding tokenised line(s)
-    penultimate = seen[-1] if has_history else None  # directly preceding
+    penultimate = seen[-1] if seen else None  # directly preceding
     node = Node(prefix=None, contents=line, suffix=None, line_no=line_no, block_no=block_no)
     if line == "":
         node.prefix = Prefix.BlankNode
@@ -52,10 +51,20 @@ def tokenise_line(line, line_no, block_no, seen=None, config=None):
             node.prefix = Prefix.Because
         elif line[2] == ".":
             node.prefix = Prefix.Therefore
-        elif penultimate and penultimate.contents.endswith(":"):
-            # Mark penultimate line's suffix as beginning a list
-            penultimate.suffix = Suffix.InitList
-            node.prefix = Prefix.InitList
+        elif penultimate:
+            if penultimate.prefix is Prefix.Question:
+                node.prefix = Prefix.Answer
+                # Keep a record of the location of its paired node
+                penultimate.paired_to = (block_no, line_no)
+                node.paired_to = (penultimate.block_no, penultimate.line_no)
+            elif penultimate.contents.endswith(":"):
+                # Mark penultimate line's suffix as beginning a list
+                penultimate.suffix = Suffix.InitList
+                node.prefix = Prefix.InitList
+            elif ALLOW_LIST_WITHOUT_SUFFIX_INIT:
+                node.prefix = Prefix.InitList
+            else:
+                print(f"Falling through... {node.contents}")
         elif ALLOW_LIST_WITHOUT_SUFFIX_INIT:
             node.prefix = Prefix.InitList
         # (Question not implemented here)
@@ -100,38 +109,63 @@ def tokenise_line(line, line_no, block_no, seen=None, config=None):
     return node
 
 
-class Affix(Enum):
+class Affix(NamedConstant):
     """
     Affixes following the MMD 'lever' format specification.
     """
 
     @classmethod
     def name_from_tokenseq(cls, tok):
-        "IN: the string matched by the token. OUT: the node name."
-        # N.B. assumes the token-matching string is unique!
-        return cls.tokseq2nodename_dict.get(tok)
+        """
+        IN: the string matched by the token. OUT: the node name or
+        a list of names if the token name is not unique.
+        """
+        matches = cls.tokseq2name_multidict.get(tok)
+        if matched:
+            if len(matched) == 1:
+                [matched] = matched
+        else:
+            raise KeyError(f"{tok} not a valid Affix token sequence")
+        return matched
+
+    #@classproperty
+    #def tokseq2name_dict(cls):
+    #    "KEY: the string matched by the token. VAL: the node name."
+    #    # N.B. does not assume the token-matching string is unique
+    #    d = {k: v._value_ for k,v in Prefix.__members__.items()}
+    #    return d
 
     @classproperty
-    def tokseq2name_dict(cls):
-        "KEY: the string matched by the token. VAL: the node name."
-        # N.B. assumes the token-matching string is unique!
-        d = {v.value: v.name for v in list(cls.__members__.values())}
+    def tokseq2name_multidict(cls):
+        "KEY: the string matched by the token(s). VAL: list of node name(s)."
+        # N.B. does not assume the token-matching string is unique
+        d = {
+                v._value_: [
+                    k
+                    for k in cls._members_
+                    if cls._members_.get(k)._value_ == v._value_
+                ]
+                for v in cls._members_.values()
+            }
         return d
 
     @classmethod
     def token_from_name(cls, name):
-        "IN: the node name. OUT: the token (an `Enum` object)."
+        "IN: the node name. OUT: the token (a `NamedConstant` object)."
         return cls.name2tok_dict.get(name)
 
     @classproperty
     def name2tok_dict(cls):
-        "KEY: the node name. VAL: the token (an `Enum` object)."
-        d = {v.name: v for v in list(cls.__members__.values())}
+        "KEY: the node name. VAL: the token (a `NamedConstant` object)."
+        d = {v._name_: v for v in cls._members_.values()}
         return d
 
     @property
     def str(self):
-        return self.value
+        return self._value_
+
+    def is_named(self, name):
+        return self._name_ == name
 
 
 class Prefix(Affix):
@@ -145,7 +179,8 @@ class Prefix(Affix):
 
     PlainNode = "-"  # A or Cb [if line ends with colon and precedes C"
     FollowOn = "-,"  # Ac
-    InitList = "-:"  # B [default: indicating a list] or Cr [if after C]
+    InitList = "-:"  # B [default: indicating a list]
+    Answer = "-:"  # Cr [if penultimate line was C]
     ContList = "-,:"  # Bc
     Question = "-?"  # C
     ContQuestion = "-,?"  # Cc
@@ -207,7 +242,7 @@ class Node:
             if p:
                 self.contents = self.contents[len(p.str) :]
         if p:
-            assert isinstance(p, Prefix)  # must be either `None` or `Prefix` Enum
+            assert isinstance(p, Prefix)  # either `None` or `Prefix` NamedConstant
         self._prefix = p
 
     @property
@@ -233,5 +268,5 @@ class Node:
             if s:
                 self.contents = self.contents[: -len(s.str)]
         if s:
-            assert isinstance(s, Suffix)  # must be either `None` or `Suffix` Enum
+            assert isinstance(s, Suffix)  # either `None` or `Suffix` NamedConstant
         self._suffix = s

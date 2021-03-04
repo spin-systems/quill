@@ -51,10 +51,12 @@ class HtmlPage:
         return head
 
 class HtmlDoc(HtmlPage):
-    def __init__(self, doc, depth_from_root):
+    def __init__(self, doc, depth_from_root, qa_pair=False, nested_qa_summary=False):
         self.preamble = "<!doctype html>\n"
         self.doc = doc
         self.depth = depth_from_root
+        self.qa_pair = qa_pair
+        self.nested_qa_summary = nested_qa_summary
         self.head = self.make_head()
 
     def as_str(self):
@@ -62,6 +64,12 @@ class HtmlDoc(HtmlPage):
         html = Tag(soup, name="html")
         html.append(self.head)
         body = Tag(name="body")
+        article = self.process_article()
+        body.append(article)
+        html.append(body)
+        return self.preamble + str(html)#.prettify()
+
+    def process_article(self):
         article = Tag(name="article")
         unassigned_lists = self.doc.lists.copy()
         for b in self.doc.blocks:
@@ -73,10 +81,10 @@ class HtmlDoc(HtmlPage):
                     # the list is in this block
                     assignable_lists.append(l)
                 # do stuff with the assignable lists in this block
-            block_html = HtmlBlock(b, assignable_lists).as_soup()
+            block_html = HtmlBlock(
+                b, assignable_lists, self.qa_pair, self.nested_qa_summary
+            ).as_soup()
             article.append(block_html)
             for l in assignable_lists:
                 unassigned_lists.pop(0) # pop only after iterating over
-        body.append(article)
-        html.append(body)
-        return self.preamble + str(html)#.prettify()
+        return article
