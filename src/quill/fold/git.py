@@ -50,12 +50,12 @@ def git_news(repo, abbreviate_at=2):
         upds := [stat[3:] for stat in gnew if stat[0] == "U"],
     ]
     if abbreviate_at:
-        mods = f"{len(mods)} files" if len(mods) > abbreviate_at else mods
-        adds = f"{len(adds)} files" if len(adds) > abbreviate_at else adds
-        dels = f"{len(dels)} files" if len(dels) > abbreviate_at else dels
-        rens = f"{len(rens)} files" if len(rens) > abbreviate_at else rens
-        cops = f"{len(cops)} files" if len(cops) > abbreviate_at else cops
-        upds = f"{len(upds)} files" if len(upds) > abbreviate_at else upds
+        mods = [f"{len(mods)} files"] if len(mods) > abbreviate_at else mods
+        adds = [f"{len(adds)} files"] if len(adds) > abbreviate_at else adds
+        dels = [f"{len(dels)} files"] if len(dels) > abbreviate_at else dels
+        rens = [f"{len(rens)} files"] if len(rens) > abbreviate_at else rens
+        cops = [f"{len(cops)} files"] if len(cops) > abbreviate_at else cops
+        upds = [f"{len(upds)} files"] if len(upds) > abbreviate_at else upds
     # iterate over the status lists, joining them with commas (except if already
     # string-ified by the abbreviation block above)
     all_reports = [
