@@ -3,8 +3,15 @@ from .ns_util import ns_path, ns
 from ..manifest.man import ssm
 from sys import stderr
 from git import Repo
+from itertools import starmap
 
-__all__ = ["clone", "source_manifest", "git_news", "remote_push_manifest", "remote_pull_manifest"]
+__all__ = [
+    "clone",
+    "source_manifest",
+    "GitNews",
+    "remote_push_manifest",
+    "remote_pull_manifest",
+]
 
 
 def clone(url, as_name=None, wd=ns_path, update_man=True):
@@ -34,44 +41,53 @@ def source_manifest():
     return
 
 
-def git_news(repo, abbreviate_at=2):
-    """
-    Given a repo object, generate the `git status --porcelain` output
-    and parse it to give an overview of what changed.
-    """
-    gitnews = repo.git.status("--porcelain")
-    gnew = gitnews.split("\n")
-    status_lists = [
-        mods := [stat[3:] for stat in gnew if stat[0] == "M"],
-        adds := [stat[3:] for stat in gnew if stat[0] == "A"],
-        dels := [stat[3:] for stat in gnew if stat[0] == "D"],
-        rens := [stat[3:] for stat in gnew if stat[0] == "R"],
-        cops := [stat[3:] for stat in gnew if stat[0] == "C"],
-        upds := [stat[3:] for stat in gnew if stat[0] == "U"],
-    ]
-    if abbreviate_at:
-        mods = [f"{len(mods)} files"] if len(mods) > abbreviate_at else mods
-        adds = [f"{len(adds)} files"] if len(adds) > abbreviate_at else adds
-        dels = [f"{len(dels)} files"] if len(dels) > abbreviate_at else dels
-        rens = [f"{len(rens)} files"] if len(rens) > abbreviate_at else rens
-        cops = [f"{len(cops)} files"] if len(cops) > abbreviate_at else cops
-        upds = [f"{len(upds)} files"] if len(upds) > abbreviate_at else upds
-    # iterate over the status lists, joining them with commas (except if already
-    # string-ified by the abbreviation block above)
-    all_reports = [
-        modreport := ["Changed ".join(["", ", ".join(l)]) for l in [mods] if mods],
-        addreport := ["Added ".join(["", ", ".join(l)]) for l in [adds] if adds],
-        delreport := ["Deleted ".join(["", ", ".join(l)]) for l in [dels] if dels],
-        renreport := ["Renamed ".join(["", ", ".join(l)]) for l in [rens] if rens],
-        copreport := ["Copied ".join(["", ", ".join(l)]) for l in [cops] if cops],
-        updreport := ["Updated ".join(["", ", ".join(l)]) for l in [upds] if upds],
-    ]
-    report = [". ".join(stats) for stats in all_reports if stats]
-    news = ". ".join(report)
-    return news
+class GitNews:
+    status_mapping = {
+        "M": "Changed",
+        "A": "Added",
+        "D": "Deleted",
+        "R": "Renamed",
+        "C": "Copied",
+        "U": "Updated",
+    }
+
+    def __init__(self, repo, abbreviate_at=2):
+        """
+        Given a repo object, generate the `git status --porcelain` output
+        and parse it to give an overview of what changed.
+        """
+        self._news = repo.git.status("--porcelain")
+        self.gnew = self._news.split("\n")
+        self.status_lists = [*map(self.get_status, self.status_mapping)]
+        self.abbreviate_at = abbreviate_at
+
+    @property
+    def status_labels(self):
+        return [*self.status_mapping.values()]
+
+    @property
+    def all_reports(self):
+        return [
+            *starmap(self.report_status, zip(self.status_labels, self.status_lists))
+        ]
+
+    def __news_repr__(self):
+        report = [". ".join(stats) for stats in self.all_reports if stats]
+        return ". ".join(report)
+
+    def get_status(self, letter_code):
+        return [stat[3:] for stat in self.gnew if stat[0] == letter_code]
+
+    def abbreviate_status(self, status):
+        return [f"{len(status)} files"] if len(status) > self.abbreviate_at else status
+
+    def report_status(self, action, status):
+        "Returns e.g. 'Changed fileA.' or 'Changed 3 files.' as a string."
+        status = self.abbreviate_status(status) if self.abbreviate_at else status
+        return [f"{action} ".join(["", ", ".join(l)]) for l in [status] if status]
 
 
-def remote_push_manifest(commit_msg=None, specific_domains=None):
+def remote_push_manifest(commit_msg=None, specific_domains=None, prebuild=True):
     """
     Run `git add --all` on each repo in the manifest (`qu.ssm`),
     i.e. apex and all subdomains, then `git commit -m "..."`
@@ -96,26 +112,28 @@ def remote_push_manifest(commit_msg=None, specific_domains=None):
         repo.git.add("--all")
         if not repo.is_dirty():
             print(f"Skipping '{repo_dir=!s}' (working tree clean)", file=stderr)
-            continue # repo has no changes to untracked files, skip it
+            continue  # repo has no changes to untracked files, skip it
         if commit_msg is None:
-            commit_msg = git_news(repo)
+            news = GitNews(repo)
+            commit_msg = news.__news_repr__()
         if commit_msg == "":
-            warn_msg = f"Warning: git repo stage added to at '{repo_dir=!s}'"
-            raise ValueError("{warn_msg} - aborting commit (empty commit message)")
+            msg = f"git repo stage added to at '{repo_dir=!s}'"
+            raise ValueError("{msg} - aborting commit (empty commit message)")
         else:
             repo.git.commit("-m", commit_msg)
             print(f"Commit [{repo_dir=!s}] ⠶ {commit_msg}", file=stderr)
             origin = repo.remote(name="origin")
-            origin.push() # returned Push object does not seem to store useful info
+            origin.push()  # returned Push object does not seem to store useful info
             print(f"⇢ Pushing ⠶ {origin.name}", file=stderr)
     ssm.check_manifest()
     return
+
 
 def remote_pull_manifest(specific_domains=None):
     """
     Run `git pull` on each repo in the manifest (`qu.ssm`),
     i.e. apex and all subdomains.
-    
+
     No merge method is specified (unclear whether this will be necessary).
 
     See here if there are problems:
@@ -138,7 +156,7 @@ def remote_pull_manifest(specific_domains=None):
             continue  # simply do not touch for now
         repo = Repo(repo_dir)
         origin = repo.remote(name="origin")
-        origin.pull() # not checked if returned Pull object stores useful info
+        origin.pull()  # not checked if returned Pull object stores useful info
         print(f"⇢ Pulling ⠶ {origin.name}", file=stderr)
     ssm.check_manifest()
     return
