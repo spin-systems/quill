@@ -1,4 +1,5 @@
 from subprocess import run
+from . import cut
 from .ns_util import ns_path, ns
 from ..manifest.man import ssm
 from sys import stderr
@@ -113,6 +114,9 @@ def remote_push_manifest(commit_msg=None, specific_domains=None, prebuild=True):
         if not repo.is_dirty():
             print(f"Skipping '{repo_dir=!s}' (working tree clean)", file=stderr)
             continue  # repo has no changes to untracked files, skip it
+        if prebuild:
+            cut.standup(domains_list=[domain])
+            repo.git.add("--all")
         if commit_msg is None:
             news = GitNews(repo)
             commit_msg = news.__news_repr__()

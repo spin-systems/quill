@@ -5,3 +5,5 @@ gitpython
 bs4
 html5lib
 aenum
+staticjinja
+markdown
