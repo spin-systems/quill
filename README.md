@@ -10,13 +10,13 @@ but for everyday usage the commands needed are:
 import quill as ql
 ql.ssm.check_manifest() # Check all component repos' status
 ql.ssm.repos_df # print the summary dataframe
-ql.fold.wire.standup() # build or rebuild any wire MMD documents as HTML pages
+ql.fold.wire.standup() # build or rebuild any 'wire' module MMD documents as HTML pages
+ql.fold.cut.standup() # build or rebuild any 'cut' module Jinja templates as HTML pages
 ql.remote_push_manifest() # Add/commit/push any dirty repos, triggering CI build
 ```
 
-The last step is dependent on the manifest being updated: if changes are made, you need to
-re-run `check_manifest` to update `ssm` ("spin.systems manifest"). This ensures that changes
-do not 'go live' to the site unintentionally.
+The last step will also rebuild any sites which have dirty repos (to avoid content partially falling behind,
+when for instance the templates for a site are changed).
 
 ## Structure
 
