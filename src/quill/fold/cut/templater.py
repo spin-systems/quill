@@ -11,22 +11,25 @@ __all__ = ["standup"]
 
 markdowner = markdown.Markdown(output_format="html5")
 
+OUT_DIRNAME = "site"
+TEMPLATE_DIRNAME = "src"
+POST_DIRNAME = "posts"
 
-def standup(domains_list=None, verbose=True, out_dirname="site", post_dirname="posts"):
+def standup(domains_list=None, verbose=True):
     domains_list = domains_list or [*ns]
     for domain in domains_list:
         ns_p = ns_path / domain
         if not ns_p.exists() and ns_p.is_dir():
             raise ValueError(f"{ns_p} not found")
-        template_dir = ns_p / "templates"
+        template_dir = ns_p / TEMPLATE_DIRNAME
         if template_dir.exists():
-            site_dir = ns_p / out_dirname
-            post_dir = ns_p / post_dirname
+            site_dir = ns_p / OUT_DIRNAME
+            post_dir = template_dir / POST_DIRNAME
             extra_ctxs = []
             if post_dir.exists():
                 for a in post_dir.iterdir():
                     print(a)
-                post_leaf_dir = Path(post_dirname)
+                post_leaf_dir = Path(POST_DIRNAME)
                 post_ctxs = [
                     (str(post_leaf_dir / a.name), article)
                     for a in post_dir.iterdir()
@@ -68,7 +71,8 @@ def indexed_articles(template, dir_path):
                 if not a.is_dir()  # not sub-directory
                 if not a.name.startswith("_")  # not partial template
             ],
-            key=lambda d: d["date"]
+            key=lambda d: d["date"],
+            reverse=True,
         )
     }
 
@@ -96,9 +100,10 @@ def md_context(template):
 def render_md(site, template, **kwargs):
     print(f"Rendering {template} (md)")
     # i.e. posts/post1.md -> build/posts/post1.html
-    out = site.outpath / Path(template.name).with_suffix(".html")
+    template_out_as = Path(template.name).relative_to(Path(POST_DIRNAME))
+    out = site.outpath / template_out_as.with_suffix(".html")
     # Compile and stream the result
-    site.get_template("templates/layouts/_post.html").stream(**kwargs).dump(
+    site.get_template("layouts/_post.html").stream(**kwargs).dump(
         str(out), encoding="utf-8"
     )
 
