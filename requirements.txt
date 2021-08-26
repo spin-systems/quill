@@ -7,3 +7,5 @@ html5lib
 aenum
 staticjinja
 markdown
+python-frontmatter
+dateparser
