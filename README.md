@@ -26,6 +26,7 @@ when for instance the templates for a site are changed).
 - `ql`⠶`fold`: Manage `*.spin.systems` subdomains
   - `fold`⠶`address`: Manage subdomain address shorthand
   - `fold`⠶`wire`: Emit HTML websites from `.mmd` files
+  - `fold`⠶`cut`: Emit HTML websites from `.html` Jinja templates and `.md` files
 
 ## Usage memo
 
