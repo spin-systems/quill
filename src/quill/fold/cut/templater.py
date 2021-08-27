@@ -71,7 +71,7 @@ def indexed_articles(template, dir_path):
                 if not a.is_dir()  # not sub-directory
                 if not a.name.startswith("_")  # not partial template
             ],
-            key=lambda d: d["date"],
+            key=lambda d: dateparser.parse(d["date"]),
             reverse=True,
         )
     }
