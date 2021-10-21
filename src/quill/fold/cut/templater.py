@@ -27,12 +27,17 @@ def standup(domains_list=None, verbose=True):
             post_dir = template_dir / POST_DIRNAME
             extra_ctxs = []
             if post_dir.exists():
-                for a in post_dir.iterdir():
+                post_dir_sans_drafts = [
+                    a
+                    for a in post_dir.iterdir()
+                    if a.name != "drafts"
+                ]
+                for a in post_dir_sans_drafts:
                     print(a)
                 post_leaf_dir = Path(POST_DIRNAME)
                 post_ctxs = [
                     (str(post_leaf_dir / a.name), article)
-                    for a in post_dir.iterdir()
+                    for a in post_dir_sans_drafts
                 ]
                 extra_ctxs.extend(post_ctxs)
                 extra_ctxs.extend(
@@ -98,6 +103,8 @@ def md_context(template):
 
 
 def render_md(site, template, **kwargs):
+    if "/drafts/" in template.name:
+        return
     print(f"Rendering {template} (md)")
     # i.e. posts/post1.md -> build/posts/post1.html
     template_out_as = Path(template.name).relative_to(Path(POST_DIRNAME))
