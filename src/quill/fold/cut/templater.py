@@ -108,6 +108,11 @@ def render_md(site, template, **kwargs):
     print(f"Rendering {template} (md)")
     # i.e. posts/post1.md -> build/posts/post1.html
     template_out_as = Path(template.name).relative_to(Path(POST_DIRNAME))
+    out_parts = list(template_out_as.parts)
+    if len(out_parts) > 1:
+        if template_out_as.stem == "index":
+            out_parts.pop() # Remove the index, giving it the parent dir as its path
+        template_out_as = Path("_".join(out_parts))
     out = site.outpath / template_out_as.with_suffix(".html")
     # Compile and stream the result
     site.get_template("layouts/_post.html").stream(**kwargs).dump(
