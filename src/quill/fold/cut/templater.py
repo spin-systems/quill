@@ -15,6 +15,7 @@ OUT_DIRNAME = "site"
 TEMPLATE_DIRNAME = "src"
 POST_DIRNAME = "posts"
 
+
 def standup(domains_list=None, verbose=True):
     domains_list = domains_list or [*ns]
     for domain in domains_list:
@@ -28,22 +29,24 @@ def standup(domains_list=None, verbose=True):
             extra_ctxs = []
             if post_dir.exists():
                 post_dir_sans_drafts = [
-                    a
-                    for a in post_dir.iterdir()
-                    if a.name != "drafts"
+                    a for a in post_dir.iterdir() if a.name != "drafts"
                 ]
                 for a in post_dir_sans_drafts:
                     print(a)
                 post_leaf_dir = Path(POST_DIRNAME)
                 post_ctxs = [
-                    (str(post_leaf_dir / a.name), article)
-                    for a in post_dir_sans_drafts
+                    (str(post_leaf_dir / a.name), article) for a in post_dir_sans_drafts
                 ]
                 extra_ctxs.extend(post_ctxs)
                 extra_ctxs.extend(
-                    [("index.html", partial(indexed_articles, dir_path=post_dir))]
+                    [
+                        ("index.html", partial(indexed_articles, dir_path=post_dir)),
+                        # ("index.html", partial(indexed_article_series, dir_path=post_dir)),
+                    ]
                 )
-            cut_templates(template_dir=template_dir, out_dir=site_dir, contexts=extra_ctxs)
+            cut_templates(
+                template_dir=template_dir, out_dir=site_dir, contexts=extra_ctxs
+            )
             print(f"Built {template_dir}")
 
 
@@ -66,9 +69,38 @@ def index(template):
     return {}
 
 
-def indexed_articles(template, dir_path):
+def indexed_article_series(template, dir_path, drop_hidden=True):
+    "Sort article series by date"
+    series_dict = {
+        "series": sorted(
+            [
+                article_series(a, is_path=True)
+                for a in dir_path.iterdir()
+                if a.is_dir()  # sub-directory
+                if (a / "index.md").exists()
+                if not a.name.startswith("_")  # not partial template
+            ],
+            key=lambda d: dateparser.parse(d["date"]),
+            reverse=True,
+        )
+    }
+    if drop_hidden:
+        series_dict = {
+            "series": [
+                article_series
+                for article_series in series_dict["series"]
+                if (
+                    "hidden" not in article_series
+                    or article_series["hidden"] is not True
+                )
+            ]
+        }
+    return series_dict
+
+
+def indexed_articles(template, dir_path, with_series=True):
     "Sort articles by date"
-    return {
+    articles_dict = {
         "articles": sorted(
             [
                 article(a, is_path=True)
@@ -80,6 +112,37 @@ def indexed_articles(template, dir_path):
             reverse=True,
         )
     }
+    if with_series:
+        series_dict = indexed_article_series(template, dir_path)
+        articles_dict = {
+            "articles": sorted(
+                [
+                    *articles_dict["articles"],
+                    *series_dict["series"],
+                ],
+                key=lambda d: dateparser.parse(d["date"]),
+                reverse=True,
+            )
+        }
+    return articles_dict
+
+
+def article_series(template, is_path=False):
+    print(f"Rendering {template} (article series)")
+    template_path = template if is_path else Path(template.filename)
+    template_index_path = template_path / "index.md"
+    if not template_index_path.exists():
+        raise ValueError(
+            "Metadata is not supported for non-markdown articles (index.md not found)"
+        )
+    md_content = frontmatter.load(template_index_path)
+    metadata = md_content.metadata
+    required_keys = {"title", "desc", "date"}
+    if not all(k in metadata for k in required_keys):
+        raise ValueError(
+            f"{template=} missing one or more of {required_keys=} in index.md"
+        )
+    return {"url": template_path.stem, "mtime": fmt_mtime(template_path), **metadata}
 
 
 def article(template, is_path=False):
@@ -111,8 +174,8 @@ def render_md(site, template, **kwargs):
     out_parts = list(template_out_as.parts)
     if len(out_parts) > 1:
         if template_out_as.stem == "index":
-            out_parts.pop() # Remove the index, giving it the parent dir as its path
-        template_out_as = Path("_".join(out_parts))
+            out_parts.pop()  # Remove the index, giving it the parent dir as its path
+        template_out_as = Path("-".join(out_parts))
     out = site.outpath / template_out_as.with_suffix(".html")
     # Compile and stream the result
     site.get_template("layouts/_post.html").stream(**kwargs).dump(
