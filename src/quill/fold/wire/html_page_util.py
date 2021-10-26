@@ -5,6 +5,8 @@ from .html_elem_util import MetaTag
 from .transforms import HtmlBlock
 
 class HtmlPage:
+    universal_stylesheet_href = "https://spin.systems/stylesheets/sakura-earthly.css"
+
     def __init__(self, content, depth_from_root, head_params={}):
         self.preamble = "<!doctype html>\n"
         self.content = content
@@ -24,9 +26,10 @@ class HtmlPage:
 
     @property
     def _default_css_param(self):
-        return ["styles"]
+        css_filenames = ["styles"]
+        return css_filenames
 
-    def make_head(self, css=None, desc=None, og_img=None, tw_card=True):
+    def make_head(self, css=None, desc=None, og_img=None, tw_card=True, sakura=True):
         head = Tag(name="head")
         ct_a = {"http-equiv": "Content-Type", "content": "text/html; charset=utf-8"}
         head.append(MetaTag(ct_a))
@@ -42,9 +45,12 @@ class HtmlPage:
             head.append(MetaTag(tw_card_attrs))
         if css is None:
             css = self._default_css_param
-        for s in css:
-            # all stylesheets live in the css directory under the site root
-            css_href = str(Path(*[".."] * self.depth) / "css" / f"{s}.css")
+        # Add Sakura to all pages
+        css_hrefs = [self.universal_stylesheet_href] if sakura else []
+        for css_filename in css:
+            css_hrefs.append(str(Path(*[".."] * self.depth) / "css" / f"{css_filename}.css"))
+            # all other stylesheets live in the css directory under the site root
+        for css_href in css_hrefs:
             css_attrs = {"rel": "stylesheet", "href": css_href}
             style = Tag(name="link", attrs=css_attrs, can_be_empty_element=True)
             head.append(style)

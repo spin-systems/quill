@@ -9,6 +9,7 @@ __all__ = ["IndexNav", "IndexUl", "EmittedIndex", "IntermedDirIndex", "WireIndex
 
 class BaseIndexPage(HtmlPage):
     def __init__(self, nav, head_params={}):
+        head_params["sakura"] = False
         self._nav_tag = nav
         super().__init__(self._index_content, self.rel_depth, head_params)
 

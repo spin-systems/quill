@@ -172,11 +172,16 @@ def render_md(site, template, **kwargs):
     # i.e. posts/post1.md -> build/posts/post1.html
     template_out_as = Path(template.name).relative_to(Path(POST_DIRNAME))
     out_parts = list(template_out_as.parts)
-    if len(out_parts) > 1:
-        if template_out_as.stem == "index":
+    is_index = template_out_as.stem == "index"
+    is_multipart = len(out_parts) > 1
+    if is_multipart:
+        if is_index:
             out_parts.pop()  # Remove the index, giving it the parent dir as its path
         template_out_as = Path("-".join(out_parts))
-    out = site.outpath / template_out_as.with_suffix(".html")
+    # URLs do not have to end with .html so do not add suffix other than for index file
+    # Multipart indexes drop the index name but for suffix we still treat the same
+    out_suffix = ".html" if (is_index and not is_multipart) else ""
+    out = site.outpath / template_out_as.with_suffix(out_suffix)
     # Compile and stream the result
     site.get_template("layouts/_post.html").stream(**kwargs).dump(
         str(out), encoding="utf-8"
