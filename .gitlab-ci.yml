@@ -21,4 +21,4 @@ quill:
   stage: QL
   script:
   - python3.8 -m pip install "ql"
-  - python3.8 -c "import quill as ql; ql.source_manifest(); ql.fold.wire.standup(); ql.remote_push_manifest('Testing CI commit ability...')"
+  - python3.8 -c "import quill as ql; ql.source_manifest(); ql.fold.cut.standup(); ql.fold.wire.standup(); ql.remote_push_manifest('CI auto-commit from quill on GitLab')"
