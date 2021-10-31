@@ -33,7 +33,16 @@ def yaml_manifests(as_dicts=False, yaml_filename=YAML_FNAME):
     if as_dicts:
         return manifest_dict
     else:
-        layout_dict = {d: SiteCI(y) for d, y in manifest_dict.items()}
+        layout_dict = {}
+        for d, y in manifest_dict.items():
+            try:
+                layout_dict.update({d: SiteCI(y)})
+            except:
+                print(
+                    f"Error encountered processing domain {d} (got: {layout_dict=})",
+                    file=stderr,
+                )
+                raise
         return layout_dict
 
 
