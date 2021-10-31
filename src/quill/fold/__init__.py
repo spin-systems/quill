@@ -12,6 +12,7 @@ __all__ = [
     "source_manifest",
     "remote_push_manifest",
     "remote_pull_manifest",
+    "stash_transfer_site_manifest",
     "yaml_manifests",
     "get_yaml_manifest",
     "change_build_dir"

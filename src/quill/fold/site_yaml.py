@@ -116,17 +116,20 @@ class Script:
     The script (list of commands) to run, relating to serving files from a
     single directory (which must be named 'public').
     """
-    def __init__(self, cmd_list):
+    def __init__(self, cmd_list, pages=True):
         self.cfg = {}
+        self.templates = self.pages_templates if pages else self.trigger_templates
         self.parsed_templates = []
         self.parse(cmd_list)
 
-    templates = {
+    pages_templates = {
         Cmd.Mk: None,
         Cmd.Cp: {
             "subdirectory": PathTV
         },
         Cmd.Mv: None,
+    }
+    trigger_templates = {
         Cmd.Cu: ["token", "ref", "project_id"], # will default to TemplateVar callback
     }
 
@@ -215,7 +218,7 @@ class Artifacts:
         return f"{cls} <{paths=}>"
 
 class Only:
-    "Only run on the master branch (or else specify which `branch`)"
+    "Only run on the given `branch` (default 'master')."
     def __init__(self, yaml_entry, branch="master"):
         assert yaml_entry == [branch], f"No path artifact {branch}"
         self.branch = [branch]
@@ -227,12 +230,12 @@ class Only:
 
 class PagesJob:
     "Required to build GitLab Pages: validates YAML and stores as object"
-    def __init__(self, yaml_dict):
+    def __init__(self, yaml_dict, branch="www"):
         check_yaml(yaml_dict, ["stage", "script", "artifacts", "only"])
         self.stage = Stage(yaml_dict.get("stage"))
-        self.script = Script(yaml_dict.get("script"))
+        self.script = Script(yaml_dict.get("script"), pages=True)
         self.artifacts = Artifacts(yaml_dict.get("artifacts"))
-        self.only = Only(yaml_dict.get("only"))
+        self.only = Only(yaml_dict.get("only"), branch=branch)
 
     @property
     def as_dict(self):
@@ -248,10 +251,35 @@ class PagesJob:
         cls = self.__class__.__name__
         return f"{cls}: {{{self.stage}, {self.script}, {self.artifacts}, {self.only}}}"
 
+class TriggerQuillJob:
+    """
+    Required to push the built site to the www branch via quill repo CI: validates YAML
+    and stores as object
+    """
+    def __init__(self, yaml_dict, branch="master"):
+        check_yaml(yaml_dict, ["stage", "script", "only"])
+        self.stage = Stage(yaml_dict.get("stage"))
+        self.script = Script(yaml_dict.get("script"), pages=False)
+        self.only = Only(yaml_dict.get("only"), branch=branch)
+
+    @property
+    def as_dict(self):
+        d = {
+            "stage": self.stage.value,
+            "script": self.script.as_list,
+            "only": self.only.branch
+        }
+        return d
+    
+    def __repr__(self):
+        cls = self.__class__.__name__
+        return f"{cls}: {{{self.stage}, {self.script}, {self.only}}}"
+
 class SiteCI:
     "Representing (and validating) a `gitlab-ci.yml` config deployed to GitLab Pages."
     def __init__(self, yaml_dict):
-        check_yaml(yaml_dict, ["pages"])
+        check_yaml(yaml_dict, ["trigger_quill", "pages"])
+        self.quill_trigger = TriggerQuillJob(yaml_dict.get("trigger_quill"))
         self.pages = PagesJob(yaml_dict.get("pages"))
 
     @property
@@ -268,7 +296,7 @@ class SiteCI:
 
     @property
     def as_dict(self):
-        return {"pages": self.pages.as_dict}
+        return {"trigger_quill": self.quill_trigger.as_dict, "pages": self.pages.as_dict}
 
     @property
     def as_yaml(self):

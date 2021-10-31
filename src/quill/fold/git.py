@@ -1,25 +1,26 @@
-from subprocess import run
 from . import cut
-from .ns_util import ns_path, ns
+from .ns_util import ns_path, ns, pre_existing_ns_p
 from ..manifest.man import ssm
 from sys import stderr
 from git import Repo
 from itertools import starmap
+from shutil import rmtree
 
 __all__ = [
     "clone",
     "source_manifest",
     "GitNews",
+    "preprocess_domains_list",
     "remote_push_manifest",
     "remote_pull_manifest",
+    "stash_transfer_site_manifest",
 ]
 
 
-def clone(url, as_name=None, wd=ns_path, update_man=True):
-    command = ["git", "clone", url]
-    if as_name:
-        command.append(as_name)
-    run(command, cwd=wd)
+def clone(url, as_name, wd=ns_path, update_man=True):
+    "Clone a repo from ``url`` giving it the name ``as_name``."
+    clone_path = wd / as_name
+    repo = Repo.clone_from(url, to_path=clone_path)
     ns.refresh()
     if update_man:
         ssm.check_manifest()
@@ -28,10 +29,11 @@ def clone(url, as_name=None, wd=ns_path, update_man=True):
 
 def source_manifest():
     """
-    Clone repos as per the manifest (`qu.ssm`)
+    Clone repos as per the manifest (`qu.ssm`), checking out the last branch listed in
+    the branches field [space-separated names] if distributed.
     """
-    df = ssm.repos_df.loc[:, ("domain", "git_url")]
-    for domain, url in df.values:
+    df = ssm.repos_df.loc[:, ("domain", "git_url", "branches")]
+    for domain, url, branches in df.values:
         if (ns_path / domain).exists():
             continue  # simply do not touch for now
         try:
@@ -88,13 +90,7 @@ class GitNews:
         return [f"{action} ".join(["", ", ".join(l)]) for l in [status] if status]
 
 
-def remote_push_manifest(commit_msg=None, specific_domains=None, prebuild=True):
-    """
-    Run `git add --all` on each repo in the manifest (`qu.ssm`),
-    i.e. apex and all subdomains, then `git commit -m "..."`
-    where `...` is replaced by `commit_msg` or auto-generated
-    if no commit is available.
-    """
+def preprocess_domains_list(specific_domains):
     if specific_domains is None:
         domains = ssm.repos_df.domain
     else:
@@ -104,6 +100,19 @@ def remote_push_manifest(commit_msg=None, specific_domains=None, prebuild=True):
             domains = [specific_domains]
         else:
             raise TypeError(f"Unexpected type for {specific_domains=}")
+    return domains
+
+
+def remote_push_manifest(
+    commit_msg=None, refspec=None, specific_domains=None, prebuild=True
+):
+    """
+    Run `git add --all` on each repo in the manifest (`qu.ssm`),
+    i.e. apex and all subdomains, then `git commit -m "..."`
+    where `...` is replaced by `commit_msg` or auto-generated
+    if no commit is available.
+    """
+    domains = preprocess_domains_list(specific_domains)
     for domain in domains:
         repo_dir = ns_path / domain
         if not repo_dir.exists():
@@ -126,8 +135,7 @@ def remote_push_manifest(commit_msg=None, specific_domains=None, prebuild=True):
         else:
             repo.git.commit("-m", commit_msg)
             print(f"Commit [{repo_dir=!s}] ⠶ {commit_msg}", file=stderr)
-            origin = repo.remote(name="origin")
-            origin.push()  # returned Push object does not seem to store useful info
+            repo.remotes.origin.push(refspec=refspec)
             print(f"⇢ Pushing ⠶ {origin.name}", file=stderr)
     ssm.check_manifest()
     return
@@ -143,15 +151,7 @@ def remote_pull_manifest(specific_domains=None):
     See here if there are problems:
     https://stackoverflow.com/questions/36891470/how-to-pull-with-gitpython
     """
-    if specific_domains is None:
-        domains = ssm.repos_df.domain
-    else:
-        if type(specific_domains) is list:
-            domains = specific_domains
-        elif type(specific_domains) is str:
-            domains = [specific_domains]
-        else:
-            raise TypeError(f"Unexpected type for {specific_domains=}")
+    domains = preprocess_domains_list(specific_domains)
     for domain in domains:
         print(f"Examining {domain}...", file=stderr)
         repo_dir = ns_path / domain
@@ -162,5 +162,70 @@ def remote_pull_manifest(specific_domains=None):
         origin = repo.remote(name="origin")
         origin.pull()  # not checked if returned Pull object stores useful info
         print(f"⇢ Pulling ⠶ {origin.name}", file=stderr)
+    ssm.check_manifest()
+    return
+
+
+def stash_transfer_site_manifest(
+    commit_msg=None,
+    stash_pathspec="site/",
+    checkout_branch="www",
+    purge=True,
+    specific_domains=None,
+    reset_branch=False,
+):
+    """
+    Stash [push] the ``stash_pathspec`` (default: "site/"), then ``git clean`` any
+    changes and checkout the ``checkout_branch`` (default: "www"). Purge the stashed
+    pathspec (if any files exist there) and then pop the stash to place the generated
+    files there (i.e. delete anything that was there beforehand so that it's not merged,
+    but completely overwritten, avoiding stale files being deployed). Lastly, add the
+    stash pathspec to the git index before committing it (default ``commit_msg`` is
+    ``None``: use an auto-generated commit message) and then pushing the commit to the
+    ``checkout_branch``. If ``reset_branch`` is ``True`` (default: ``False``) then the
+    original branch is checked out (it should be clean as the pathspec stashed from the
+    original branch and pushed to the ``checkout_branch`` were the same).
+
+    To be used after a site has been built (implicitly on the master branch).
+    """
+    domains = preprocess_domains_list(specific_domains)
+    for domain in domains:
+        repo_dir = ns_path / domain
+        if not repo_dir.exists():
+            print(f"Skipping '{repo_dir=!s}' (doesn't exist)", file=stderr)
+            continue  # simply do not touch for now
+        repo = Repo(repo_dir)
+        initial_repo_branch = repo.active_branch.name
+        # Stash the desired changes (only in the given pathspec)
+        repo.git.stash("push", "-a", "--", stash_pathspec)
+        # Clean away any potentially undesired changes
+        repo.git.clean("-fdx")
+        repo.git.checkout(checkout_branch)
+        if purge:
+            paths_to_rm = stash_pathspec.split(" ")  # no spaces in file/dir names!
+            for rm_path in paths_to_rm:
+                rm_p = repo_dir / rm_path
+                if rm_p.exists():
+                    rmtree(rm_p) if rm_p.is_dir() else rm_p.unlink()
+                else:
+                    print(f"Skipping '{rm_path=!s}' (doesn't exist)", file=stderr)
+        repo.git.stash("pop")
+        repo.index.add(stash_pathspec)
+        if not repo.is_dirty():
+            print(f"Skipping '{repo_dir=!s}' (working tree clean)", file=stderr)
+            continue  # repo has no changes to tracked pathspec files, skip it
+        if commit_msg is None:
+            news = GitNews(repo)
+            commit_msg = news.__news_repr__()
+        if commit_msg == "":
+            msg = f"git repo stage added to at '{repo_dir=!s}'"
+            raise ValueError("{msg} - aborting commit (empty commit message)")
+        else:
+            repo.git.commit("-m", commit_msg)
+            print(f"Commit [{repo_dir=!s}] ⠶ {commit_msg}", file=stderr)
+            repo.remotes.origin.push(refspec=checkout_branch)
+            print(f"⇢ Pushing ⠶ {origin.name} ({checkout_branch})", file=stderr)
+        if reset_branch:
+            repo.git.checkout(initial_repo_branch)
     ssm.check_manifest()
     return
