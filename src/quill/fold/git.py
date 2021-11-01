@@ -4,7 +4,7 @@ from ..manifest.man import ssm
 from sys import stderr
 from git import Repo
 from itertools import starmap
-import shutil
+from subprocess import run
 from shutil import rmtree
 
 __all__ = [
@@ -170,23 +170,13 @@ def remote_pull_manifest(specific_domains=None):
 def copy_static_assets(repo_dir, from_name="static", to_name="site", purge=False):
     static_dir = repo_dir / from_name
     site_dir = repo_dir / to_name
-    for cp_path in static_dir.iterdir():
-        cp_subpath = cp_path.relative_to(static_dir)
-        target_path = site_dir / cp_subpath
-        if target_path.exists():
-            if not purge:
-                print(
-                    f"Not overwriting {cp_path=} at {target_path=} "
-                    "(static target already exists)"
-                )
-                continue
-            else:
-                rmtree(target_path) if target_path.is_dir() else target_path.unlink()
-        # Target path now doesn't exist (either already or has been purged)
-        if cp_path.is_dir():
-            shutil.copytree(cp_path, target_path)
-        else:
-            shutil.copy(cp_path, target_path.parent)
+    if purge and site_dir.exists():
+        rmtree(site_dir)
+    site_dir.mkdir(exist_ok=not purge)
+    clobber_flag = [] if purge else ["--no-clobber"]
+    cp_cmd = ["cp", "-r", *clobber_flag, f"{cp_path!s}", f"{target_path!s}"]
+    if run(cp_cmd).returncode != 0:
+        raise ValueError(f"Failed to copy {cp_path=} to {target_path=}")
 
 
 def stash_transfer_site_manifest(
