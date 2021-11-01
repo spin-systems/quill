@@ -4,6 +4,7 @@ from ..manifest.man import ssm
 from sys import stderr
 from git import Repo
 from itertools import starmap
+import shutil
 from shutil import rmtree
 
 __all__ = [
@@ -165,6 +166,24 @@ def remote_pull_manifest(specific_domains=None):
     ssm.check_manifest()
     return
 
+def copy_static_assets(repo_dir, from_name="static", to_name="site", purge=False):
+    static_dir = repo_dir / from_name
+    site_dir = repo_dir / to_name
+    for cp_subpath in static_dir.iterdir():
+        cp_path = static_dir / cp_subpath
+        target_path = site_dir / cp_subpath
+        if target_path.exists():
+            if not purge:
+                print(f"Not overwriting {target_path} (static asset already exists)")
+                continue
+            else:
+                rmtree(target_path) if target_path.is_dir() else target_path.unlink()
+        # Target path now doesn't exist (either already or has been purged)
+        if cp_path.is_dir():
+            shutil.copytree(cp_path, target_path)
+        else:
+            shutil.copy(cp_path, target_path.parent)
+
 
 def stash_transfer_site_manifest(
     commit_msg=None,
@@ -194,6 +213,8 @@ def stash_transfer_site_manifest(
         if not repo_dir.exists():
             print(f"Skipping '{repo_dir=!s}' (doesn't exist)", file=stderr)
             continue  # simply do not touch for now
+        elif (repo_dir / "static").exists():
+            copy_static_assets(repo_dir)
         repo = Repo(repo_dir)
         initial_repo_branch = repo.active_branch.name
         # Stash the desired changes (only in the given pathspec)
