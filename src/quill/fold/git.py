@@ -136,7 +136,8 @@ def remote_push_manifest(
         else:
             repo.git.commit("-m", commit_msg)
             print(f"Commit [{repo_dir=!s}] ⠶ {commit_msg}", file=stderr)
-            repo.remotes.origin.push(refspec=refspec)
+            origin = repo.remotes.origin
+            origin.push(refspec=refspec)
             print(f"⇢ Pushing ⠶ {origin.name}", file=stderr)
     ssm.check_manifest()
     return
@@ -160,7 +161,7 @@ def remote_pull_manifest(specific_domains=None):
             print(f"Skipping '{repo_dir=!s}' (doesn't exist)", file=stderr)
             continue  # simply do not touch for now
         repo = Repo(repo_dir)
-        origin = repo.remote(name="origin")
+        origin = repo.remotes.origin
         origin.pull()  # not checked if returned Pull object stores useful info
         print(f"⇢ Pulling ⠶ {origin.name}", file=stderr)
     ssm.check_manifest()
@@ -252,7 +253,8 @@ def stash_transfer_site_manifest(
         else:
             repo.git.commit("-m", commit_msg)
             print(f"Commit [{repo_dir=!s}] ⠶ {commit_msg}", file=stderr)
-            repo.remotes.origin.push(refspec=checkout_branch)
+            origin = repo.remotes.origin
+            origin.push(refspec=checkout_branch)
             print(f"⇢ Pushing ⠶ {origin.name} ({checkout_branch})", file=stderr)
         if reset_branch:
             repo.git.checkout(initial_repo_branch)
