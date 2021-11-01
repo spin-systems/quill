@@ -174,7 +174,10 @@ def copy_static_assets(repo_dir, from_name="static", to_name="site", purge=False
         target_path = site_dir / cp_subpath
         if target_path.exists():
             if not purge:
-                print(f"Not overwriting {target_path} (static asset already exists)")
+                print(
+                    f"Not overwriting {cp_path=} at {target_path=} "
+                    "(static target already exists)"
+                )
                 continue
             else:
                 rmtree(target_path) if target_path.is_dir() else target_path.unlink()
