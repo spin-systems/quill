@@ -169,8 +169,8 @@ def remote_pull_manifest(specific_domains=None):
 def copy_static_assets(repo_dir, from_name="static", to_name="site", purge=False):
     static_dir = repo_dir / from_name
     site_dir = repo_dir / to_name
-    for cp_subpath in static_dir.iterdir():
-        cp_path = static_dir / cp_subpath
+    for cp_path in static_dir.iterdir():
+        cp_subpath = cp_path.relative_to(static_dir)
         target_path = site_dir / cp_subpath
         if target_path.exists():
             if not purge:
