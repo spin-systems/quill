@@ -218,7 +218,12 @@ def stash_transfer_site_manifest(
         repo = Repo(repo_dir)
         initial_repo_branch = repo.active_branch.name
         # Stash the desired changes (only in the given pathspec)
-        repo.git.stash("push", "-a", "--", stash_pathspec)
+        stashed_msg = repo.git.stash("push", "-a", "--", stash_pathspec)
+        if stashed_msg == "No local changes to save":
+            print(domain, stashed_msg, "⠶ Skipping")
+            continue
+        else:
+            print("Stashed changes for", domain)
         # Clean away any potentially undesired changes
         repo.git.clean("-fdx")
         repo.git.checkout(checkout_branch)
