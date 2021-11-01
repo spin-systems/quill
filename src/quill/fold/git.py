@@ -239,7 +239,7 @@ def stash_transfer_site_manifest(
                 else:
                     print(f"Skipping '{rm_path=!s}' (doesn't exist)", file=stderr)
         repo.git.stash("pop")
-        repo.index.add(stash_pathspec)
+        repo.git.add(stash_pathspec)
         if not repo.is_dirty():
             print(f"Skipping '{repo_dir=!s}' (working tree clean)", file=stderr)
             continue  # repo has no changes to tracked pathspec files, skip it
