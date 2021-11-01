@@ -174,9 +174,9 @@ def copy_static_assets(repo_dir, from_name="static", to_name="site", purge=False
         rmtree(site_dir)
     site_dir.mkdir(exist_ok=not purge)
     clobber_flag = [] if purge else ["--no-clobber"]
-    cp_cmd = ["cp", "-r", *clobber_flag, f"{cp_path!s}", f"{target_path!s}"]
+    cp_cmd = ["cp", "-r", *clobber_flag, f"{static_dir!s}", f"{site_dir!s}"]
     if run(cp_cmd).returncode != 0:
-        raise ValueError(f"Failed to copy {cp_path=} to {target_path=}")
+        raise ValueError(f"Failed to copy {static_dir=} to {site_dir=}")
 
 
 def stash_transfer_site_manifest(
