@@ -174,7 +174,7 @@ def copy_static_assets(repo_dir, from_name="static", to_name="site", purge=False
         rmtree(site_dir)
     site_dir.mkdir(exist_ok=not purge)
     clobber_flag = [] if purge else ["--no-clobber"]
-    cp_cmd = ["cp", "-r", *clobber_flag, f"{static_dir!s}", f"{site_dir!s}"]
+    cp_cmd = ["cp", "-r", *clobber_flag, f"{static_dir!s}/.", f"{site_dir!s}"]
     if run(cp_cmd).returncode != 0:
         raise ValueError(f"Failed to copy {static_dir=} to {site_dir=}")
 
@@ -214,10 +214,10 @@ def stash_transfer_site_manifest(
         # Stash the desired changes (only in the given pathspec)
         stashed_msg = repo.git.stash("push", "-a", "--", stash_pathspec)
         if stashed_msg == "No local changes to save":
-            print(domain, stashed_msg, "⠶ Skipping")
+            print(domain, stashed_msg, "⠶ Skipping", file=stderr)
             continue
         else:
-            print("Stashed changes for", domain)
+            print("Stashed changes for", domain, file=stderr)
         # Clean away any potentially undesired changes
         repo.git.clean("-fdx")
         repo.git.checkout(checkout_branch)
