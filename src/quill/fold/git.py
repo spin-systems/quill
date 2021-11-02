@@ -6,6 +6,8 @@ from git import Repo
 from itertools import starmap
 from subprocess import run
 from shutil import rmtree
+from os import utime
+from pathlib import Path
 
 __all__ = [
     "clone",
@@ -18,27 +20,46 @@ __all__ = [
 ]
 
 
-def clone(url, as_name, wd=ns_path, update_man=True):
-    "Clone a repo from ``url`` giving it the name ``as_name``."
+def clone(url, as_name, wd=ns_path, update_man=True, use_git_mtime=False):
+    """
+    Clone a repo from ``url`` giving it the name ``as_name``. If ``use_git_mtime`` is
+    ``True``, then modify the access and modified timestamps (atime and mtime) of all
+    files in the git repo's working tree to be the most recent commit in the git log.
+    """
     clone_path = wd / as_name
     repo = Repo.clone_from(url, to_path=clone_path)
     ns.refresh()
+    if use_git_mtime:
+        for n in repo.tree().list_traverse():
+            filepath = clone_path / n.path
+            unixtime = repo.git.log(
+                "-1", "--format='%at'", "--", n.path
+            ).strip("'")
+            if not unixtime.isnumeric():
+                raise ValueError(
+                    f"git log gave non-numeric timestamp {unixtime} for {n.path}"
+                    f" during the cloning of {url}"
+                )
+            utime(filepath, times=(int(unixtime), int(unixtime)))
     if update_man:
         ssm.check_manifest()
     return
 
 
-def source_manifest():
+def source_manifest(use_git_mtime=True):
     """
     Clone repos as per the manifest (`qu.ssm`), checking out the last branch listed in
-    the branches field [space-separated names] if distributed.
+    the branches field [space-separated names] if distributed. If ``use_git_mtime`` is
+    ``True`` (the default), then modify the mtime of the cloned files with the time of
+    their last commit in the git log, rather than the one created during cloning (which
+    would otherwise be the current date and time).
     """
     df = ssm.repos_df.loc[:, ("domain", "git_url", "branches")]
     for domain, url, branches in df.values:
         if (ns_path / domain).exists():
             continue  # simply do not touch for now
         try:
-            clone(url, as_name=domain, update_man=False)
+            clone(url, as_name=domain, update_man=False, use_git_mtime=use_git_mtime)
         except Exception as e:
             print(f"Failed on {url}: {e}", file=stderr)
     ssm.check_manifest()
@@ -127,15 +148,16 @@ def remote_push_manifest(
         if prebuild:
             cut.standup(domains_list=[domain])
             repo.git.add("--all")
-        if commit_msg is None:
+        repo_commit_msg = commit_msg
+        if repo_commit_msg is None:
             news = GitNews(repo)
-            commit_msg = news.__news_repr__()
-        if commit_msg == "":
+            repo_commit_msg = news.__news_repr__()
+        if repo_commit_msg == "":
             msg = f"git repo stage added to at '{repo_dir=!s}'"
             raise ValueError("{msg} - aborting commit (empty commit message)")
         else:
-            repo.git.commit("-m", commit_msg)
-            print(f"Commit [{repo_dir=!s}] ⠶ {commit_msg}", file=stderr)
+            repo.git.commit("-m", repo_commit_msg)
+            print(f"Commit [{repo_dir=!s}] ⠶ {repo_commit_msg}", file=stderr)
             origin = repo.remotes.origin
             origin.push(refspec=refspec)
             print(f"⇢ Pushing ⠶ {origin.name}", file=stderr)
@@ -234,15 +256,16 @@ def stash_transfer_site_manifest(
         if not repo.is_dirty():
             print(f"Skipping '{repo_dir=!s}' (working tree clean)", file=stderr)
             continue  # repo has no changes to tracked pathspec files, skip it
-        if commit_msg is None:
+        repo_commit_msg = commit_msg
+        if repo_commit_msg is None:
             news = GitNews(repo)
-            commit_msg = news.__news_repr__()
-        if commit_msg == "":
+            repo_commit_msg = news.__news_repr__()
+        if repo_commit_msg == "":
             msg = f"git repo stage added to at '{repo_dir=!s}'"
             raise ValueError("{msg} - aborting commit (empty commit message)")
         else:
-            repo.git.commit("-m", commit_msg)
-            print(f"Commit [{repo_dir=!s}] ⠶ {commit_msg}", file=stderr)
+            repo.git.commit("-m", repo_commit_msg)
+            print(f"Commit [{repo_dir=!s}] ⠶ {repo_commit_msg}", file=stderr)
             origin = repo.remotes.origin
             origin.push(refspec=checkout_branch)
             print(f"⇢ Pushing ⠶ {origin.name} ({checkout_branch})", file=stderr)
