@@ -8,7 +8,11 @@ before_script:
   - if [ ! "$GITLAB_FINGERPRINT" = "$GITLAB_EXPECTED_FINGERPRINT" ]; then echo "Error - SSH fingerprint mismatch" 1>&2 && exit 25519; fi
   - mkdir -p ~/.ssh # This shouldn't be necessary but getting an error that "file/dir. doesn't exist" on next line
   - cat gitlab-key-temp >> ~/.ssh/known_hosts && rm gitlab-key-temp
-  - ssh-add <(echo "${SSH_priv_key_GitLab_ci2}" | base64 --decode | tr -d "\r")
+  - gitlab_ssh_key_decoded=$(echo "${SSH_priv_key_GitLab_ci2}" | base64 --decode | tr -d "\r")
+  - echo "${SSH_priv_key_GitLab_ci2}" | base64 --decode | tr -d "\r" | wc -c # Should be 419
+  - python3.8 -c "s = ${gitlab_ssh_key_decoded}; print('SSH newline check:', s.endswith('\n'))"
+  - ssh-add <(echo "${gitlab_ssh_key_decoded}")
+    #ssh-add <(echo "${SSH_priv_key_GitLab_ci2}" | base64 --decode | tr -d "\r")
   - ssh-add <(echo "${SSH_priv_key_GitHub}" | base64 --decode)
   - git config --global user.email "${git_email}"
   - git config --global user.name "${full_name}"
