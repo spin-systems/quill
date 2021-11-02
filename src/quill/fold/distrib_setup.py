@@ -61,23 +61,23 @@ def create_routing_table(par):
 def create_manifest(par):
     file_path = par / "manifest.mmd"
     lines = [
-        "-spin.systems:spin-systems:master:",
-        "-:cal:qu-cal:master",
-        "-,:log:spin-log:master",
+        "-spin.systems:spin-systems:master www:",
+        "-:cal:qu-cal:master www",
+        "-,:log:spin-log:master www",
         "-,:conf:qu-conf:master www",
         "-,:pore:qu-pore:master www",
         "-,:ocu:naiveoculus:master www",
         "-,:arc:appendens:master www",
         "-,:qrx:qu-arx:master www",
-        "-,:erg:spin-erg:master",
-        "-,:opt:spin-opt:master",
+        "-,:erg:spin-erg:master www",
+        "-,:opt:spin-opt:master www",
         "-,:poll:qu-poll:master www",
-        "-,:arb:spin-arb:master",
+        "-,:arb:spin-arb:master www",
         "-,:reed:qu-reed:master www",
-        "-,:noto:qu-noto:master",
-        "-,:plot:qu-plot:master",
+        "-,:noto:qu-noto:master www",
+        "-,:plot:qu-plot:master www",
         "-,:doc:spin-doc:master www",
-        "-,:labs:qu-labs:master",
+        "-,:labs:qu-labs:master www",
     ]
     with open(file_path, "w") as f:
         f.write("\n".join(lines))
