@@ -50,109 +50,84 @@ Parsed MMD file (Document of 1 block, containing 1 list)
 >>> ssm.list
 Headered list with 16 items
 >>> pprint(ssm.list.all_nodes)
-[-spin.systems:spin-systems:4:,
- -:cal:qu-cal:3,
- -,:log:spin-log:4,
- -,:conf:qu-conf:4,
- -,:pore:qu-pore:2,
- -,:ocu:naiveoculus:4,
- -,:arc:appendens:4,
- -,:qrx:qu-arx:4,
- -,:erg:spin-erg:1,
- -,:opt:spin-opt:1,
- -,:poll:qu-poll:2,
- -,:arb:spin-arb:1,
- -,:reed:qu-reed:3,
- -,:noto:qu-noto:2,
- -,:plot:qu-plot:1,
- -,:doc:spin-doc:2,
- -,:labs:qu-labs:1]
->>> pprint(ssm.list.nodes)
-[-:cal:qu-cal:3,
- -,:log:spin-log:4,
- -,:conf:qu-conf:4,
- -,:pore:qu-pore:2,
- -,:ocu:naiveoculus:4,
- -,:arc:appendens:4,
- -,:qrx:qu-arx:4,
- -,:erg:spin-erg:1,
- -,:opt:spin-opt:1,
- -,:poll:qu-poll:2,
- -,:arb:spin-arb:1,
- -,:reed:qu-reed:3,
- -,:noto:qu-noto:2,
- -,:plot:qu-plot:1,
- -,:doc:spin-doc:2,
- -,:labs:qu-labs:1]
+[-spin.systems:spin-systems:master www:,
+ -:cal:qu-cal:master www,
+ -,:log:spin-log:master www,
+ -,:conf:qu-conf:master www,
+ -,:pore:qu-pore:master www,
+ -,:ocu:naiveoculus:master www,
+ -,:arc:appendens:master www,
+ -,:qrx:qu-arx:master www,
+ -,:erg:spin-erg:master www,
+ -,:opt:spin-opt:master www,
+ -,:poll:qu-poll:master www,
+ -,:arb:spin-arb:master www,
+ -,:reed:qu-reed:master www,
+ -,:noto:qu-noto:master www,
+ -,:plot:qu-plot:master www,
+ -,:doc:spin-doc:master www,
+ -,:labs:qu-labs:master www]
+```
+
+Similarly `ssm.list.nodes` gives just the subdomains, and `ssm.list.header` gives the main site
+domain.
+
+```py
 >>> ssm.list.header
 -spin.systems:spin-systems:
 >>> ssm.list.header.parts
-['spin.systems', 'spin-systems', '4']
+['spin.systems', 'spin-systems', 'master www']
 >>> ssm.list.nodes[0].parts
-['cal', 'qu-cal', '3']
+['cal', 'qu-cal', 'master www']
 >>> ssm.list.nodes[1].parts
-['log', 'spin-log', '4']
+['log', 'spin-log', 'master www']
 >>> ssm.list.nodes[2].parts
-['conf', 'qu-conf', '4']
+['conf', 'qu-conf', 'master www']
 >>> pprint(ssm.all_parts)
-[['spin.systems', 'spin-systems', '4'],
- ['cal', 'qu-cal', '3'],
- ['log', 'spin-log', '4'],
- ['conf', 'qu-conf', '4'],
- ['pore', 'qu-pore', '2'],
- ['ocu', 'naiveoculus', '4'],
- ['arc', 'appendens', '4'],
- ['qrx', 'qu-arx', '4'],
- ['erg', 'spin-erg', '1'],
- ['opt', 'spin-opt', '1'],
- ['poll', 'qu-poll', '2'],
- ['arb', 'spin-arb', '1'],
- ['reed', 'qu-reed', '3'],
- ['noto', 'qu-noto', '2'],
- ['plot', 'qu-plot', '1'],
- ['doc', 'spin-doc', '2'],
- ['labs', 'qu-labs', '1']]
+[['spin.systems', 'spin-systems', 'master www'],
+ ['cal', 'qu-cal', 'master www'],
+ ['log', 'spin-log', 'master www'],
+ ['conf', 'qu-conf', 'master www'],
+ ['pore', 'qu-pore', 'master www'],
+ ['ocu', 'naiveoculus', 'master www'],
+ ['arc', 'appendens', 'master www'],
+ ['qrx', 'qu-arx', 'master www'],
+ ['erg', 'spin-erg', 'master www'],
+ ['opt', 'spin-opt', 'master www'],
+ ['poll', 'qu-poll', 'master www'],
+ ['arb', 'spin-arb', 'master www'],
+ ['reed', 'qu-reed', 'master www'],
+ ['noto', 'qu-noto', 'master www'],
+ ['plot', 'qu-plot', 'master www'],
+ ['doc', 'spin-doc', 'master www'],
+ ['labs', 'qu-labs', 'master www']]
 >>> ssm.as_df()
-          domain     repo_name priority
-0   spin.systems  spin-systems        4
-1            cal        qu-cal        3
-2            log      spin-log        4
-3           conf       qu-conf        4
-4           pore       qu-pore        2
-5            ocu   naiveoculus        4
-6            arc     appendens        4
-7            qrx        qu-arx        4
-8            erg      spin-erg        1
-9            opt      spin-opt        1
-10          poll       qu-poll        2
-11           arb      spin-arb        1
-12          reed       qu-reed        3
-13          noto       qu-noto        2
-14          plot       qu-plot        1
-15           doc      spin-doc        2
-16          labs       qu-labs        1
+          domain     repo_name    branches
+0   spin.systems  spin-systems  master www
+1            cal        qu-cal  master www
+2            log      spin-log  master www
+3           conf       qu-conf  master www
+4           pore       qu-pore  master www
+5            ocu   naiveoculus  master www
+6            arc     appendens  master www
+7            qrx        qu-arx  master www
+8            erg      spin-erg  master www
+9            opt      spin-opt  master www
+10          poll       qu-poll  master www
+11           arb      spin-arb  master www
+12          reed       qu-reed  master www
+13          noto       qu-noto  master www
+14          plot       qu-plot  master www
+15           doc      spin-doc  master www
+16          labs       qu-labs  master www
 ```
-
-The numeric entry is a rating of my recollection of and/or
-resolve for the purpose of each of these projects,
-roughly interpretable as
-
-1. little
-2. some
-3. fair
-4. strong
 
 This is just for review purposes currently, and any further info can be added as long
 as all the lines ("nodes") have the same number of colon-separated values.
 
 The manifest is parsed in [`manifest`⠶`parsing`](src/quill/manifest/parsing.py) by
-`parse_man_node` which is wrapped 
-
-```py
-ssm.repos
-```
-
-Which will print out the repos' git addresses for each CNAME:
+`parse_man_node` which is wrapped into `ssm.repos`,
+which will print out the repos' git addresses for each CNAME domain or subdomain:
 
 ```STDOUT
 ('spin.systems', 'git@gitlab.com:spin-systems/spin-systems.gitlab.io.git')
@@ -174,32 +149,52 @@ Which will print out the repos' git addresses for each CNAME:
 ('labs', 'git@gitlab.com:qu-labs/qu-labs.gitlab.io.git')
 ```
 
-or we can get them as a DataFrame
+as well as a DataFrame which is modified by the `ql.ssm.check_manifest()` to include 'live' views on
+the repos (note that this method takes a `add_before_check=True` argument, which controls whether
+`git add --all` is run on each repo to check if it's 'dirty').
 
 ```py
-ssm.repos_df
+>>> ssm.repos_df
+          domain     repo_name    branches                                                 git_url
+0   spin.systems  spin-systems  master www  git@gitlab.com:spin-systems/spin-systems.gitlab.io.git
+1            cal        qu-cal  master www              git@gitlab.com:qu-cal/qu-cal.gitlab.io.git
+2            log      spin-log  master www          git@gitlab.com:spin-log/spin-log.gitlab.io.git
+3           conf       qu-conf  master www            git@gitlab.com:qu-conf/qu-conf.gitlab.io.git
+4           pore       qu-pore  master www            git@gitlab.com:qu-pore/qu-pore.gitlab.io.git
+5            ocu   naiveoculus  master www    git@gitlab.com:naiveoculus/naiveoculus.gitlab.io.git
+6            arc     appendens  master www        git@gitlab.com:appendens/appendens.gitlab.io.git
+7            qrx        qu-arx  master www              git@gitlab.com:qu-arx/qu-arx.gitlab.io.git
+8            erg      spin-erg  master www          git@gitlab.com:spin-erg/spin-erg.gitlab.io.git
+9            opt      spin-opt  master www          git@gitlab.com:spin-opt/spin-opt.gitlab.io.git
+10          poll       qu-poll  master www            git@gitlab.com:qu-poll/qu-poll.gitlab.io.git
+11           arb      spin-arb  master www          git@gitlab.com:spin-arb/spin-arb.gitlab.io.git
+12          reed       qu-reed  master www            git@gitlab.com:qu-reed/qu-reed.gitlab.io.git
+13          noto       qu-noto  master www            git@gitlab.com:qu-noto/qu-noto.gitlab.io.git
+14          plot       qu-plot  master www            git@gitlab.com:qu-plot/qu-plot.gitlab.io.git
+15           doc      spin-doc  master www          git@gitlab.com:spin-doc/spin-doc.gitlab.io.git
+16          labs       qu-labs  master www            git@gitlab.com:qu-labs/qu-labs.gitlab.io.git
+>>> ssm.check_manifest()
+          domain     repo_name    branches                                                 git_url  branch  local  clean
+0   spin.systems  spin-systems  master www  git@gitlab.com:spin-systems/spin-systems.gitlab.io.git     www   True   True
+1            cal        qu-cal  master www              git@gitlab.com:qu-cal/qu-cal.gitlab.io.git     www   True   True
+2            log      spin-log  master www          git@gitlab.com:spin-log/spin-log.gitlab.io.git     www   True   True
+3           conf       qu-conf  master www            git@gitlab.com:qu-conf/qu-conf.gitlab.io.git     www   True   True
+4           pore       qu-pore  master www            git@gitlab.com:qu-pore/qu-pore.gitlab.io.git     www   True   True
+5            ocu   naiveoculus  master www    git@gitlab.com:naiveoculus/naiveoculus.gitlab.io.git     www   True   True
+6            arc     appendens  master www        git@gitlab.com:appendens/appendens.gitlab.io.git     www   True   True
+7            qrx        qu-arx  master www              git@gitlab.com:qu-arx/qu-arx.gitlab.io.git     www   True   True
+8            erg      spin-erg  master www          git@gitlab.com:spin-erg/spin-erg.gitlab.io.git     www   True   True
+9            opt      spin-opt  master www          git@gitlab.com:spin-opt/spin-opt.gitlab.io.git     www   True   True
+10          poll       qu-poll  master www            git@gitlab.com:qu-poll/qu-poll.gitlab.io.git  master   True   True
+11           arb      spin-arb  master www          git@gitlab.com:spin-arb/spin-arb.gitlab.io.git     www   True   True
+12          reed       qu-reed  master www            git@gitlab.com:qu-reed/qu-reed.gitlab.io.git     www   True   True
+13          noto       qu-noto  master www            git@gitlab.com:qu-noto/qu-noto.gitlab.io.git     www   True   True
+14          plot       qu-plot  master www            git@gitlab.com:qu-plot/qu-plot.gitlab.io.git     www   True   True
+15           doc      spin-doc  master www          git@gitlab.com:spin-doc/spin-doc.gitlab.io.git     www   True   True
+16          labs       qu-labs  master www            git@gitlab.com:qu-labs/qu-labs.gitlab.io.git     www   True   True
 ```
-⇣
-```STDOUT
-          domain     repo_name priority                                                 git_url
-0   spin.systems  spin-systems        4  git@gitlab.com:spin-systems/spin-systems.gitlab.io.git
-1            cal        qu-cal        3              git@gitlab.com:qu-cal/qu-cal.gitlab.io.git
-2            log      spin-log        4          git@gitlab.com:spin-log/spin-log.gitlab.io.git
-3           conf       qu-conf        4            git@gitlab.com:qu-conf/qu-conf.gitlab.io.git
-4           pore       qu-pore        2            git@gitlab.com:qu-pore/qu-pore.gitlab.io.git
-5            ocu   naiveoculus        4    git@gitlab.com:naiveoculus/naiveoculus.gitlab.io.git
-6            arc     appendens        4        git@gitlab.com:appendens/appendens.gitlab.io.git
-7            qrx        qu-arx        4              git@gitlab.com:qu-arx/qu-arx.gitlab.io.git
-8            erg      spin-erg        1          git@gitlab.com:spin-erg/spin-erg.gitlab.io.git
-9            opt      spin-opt        1          git@gitlab.com:spin-opt/spin-opt.gitlab.io.git
-10          poll       qu-poll        2            git@gitlab.com:qu-poll/qu-poll.gitlab.io.git
-11           arb      spin-arb        1          git@gitlab.com:spin-arb/spin-arb.gitlab.io.git
-12          reed       qu-reed        3            git@gitlab.com:qu-reed/qu-reed.gitlab.io.git
-13          noto       qu-noto        2            git@gitlab.com:qu-noto/qu-noto.gitlab.io.git
-14          plot       qu-plot        1            git@gitlab.com:qu-plot/qu-plot.gitlab.io.git
-15           doc      spin-doc        2          git@gitlab.com:spin-doc/spin-doc.gitlab.io.git
-16          labs       qu-labs        1            git@gitlab.com:qu-labs/qu-labs.gitlab.io.git
-```
+
+In this example, the `poll` repo is on the master branch, and the rest are on the www (web deploy) branch.
 
 Obviously this can then be used to clone the repositories locally
 (or address them for any other `git`-related task)
@@ -208,7 +203,7 @@ Obviously this can then be used to clone the repositories locally
   provide to my knowledge) is that these repos can all be private, and only
   the static site will be hosted publicly (specified in 'Settings' > 'General')
 
-To clone a given repo (testing has all been with SSH URLs), there is the `clone` function,
+To clone a given repo (testing has all been with SSH URLs), there is the `ql.clone()` function,
 and subsequently the namespace can be `refresh`ed to reflect the new addition (this is
 done automatically within the `clone` function).
 
@@ -228,7 +223,8 @@ Resolving deltas: 100% (123/123), done.
 ```
 
 Lastly, the entire manifest of repos can be sourced from `ssm` and `clone`d into the
-`ns_path` directory.
+`ns_path` directory. This is done on CI to build each site when a change takes place
+in one of the source repos or the quill repo (the 'engine').
 
 ```py
 ql.source_manifest()
@@ -270,28 +266,6 @@ from the `Doc` class.
   which are locally available. This ensures no unnecessary computation is done before the extra
   information is needed.
 
-```py
->>> ssm.repos_df
-          domain     repo_name priority                                                 git_url  local
-0   spin.systems  spin-systems        4  git@gitlab.com:spin-systems/spin-systems.gitlab.io.git   True
-1            cal        qu-cal        3              git@gitlab.com:qu-cal/qu-cal.gitlab.io.git   True
-2            log      spin-log        4          git@gitlab.com:spin-log/spin-log.gitlab.io.git   True
-3           conf       qu-conf        4            git@gitlab.com:qu-conf/qu-conf.gitlab.io.git   True
-4           pore       qu-pore        2            git@gitlab.com:qu-pore/qu-pore.gitlab.io.git   True
-5            ocu   naiveoculus        4    git@gitlab.com:naiveoculus/naiveoculus.gitlab.io.git   True
-6            arc     appendens        4        git@gitlab.com:appendens/appendens.gitlab.io.git   True
-7            qrx        qu-arx        4              git@gitlab.com:qu-arx/qu-arx.gitlab.io.git   True
-8            erg      spin-erg        1          git@gitlab.com:spin-erg/spin-erg.gitlab.io.git   True
-9            opt      spin-opt        1          git@gitlab.com:spin-opt/spin-opt.gitlab.io.git   True
-10          poll       qu-poll        2            git@gitlab.com:qu-poll/qu-poll.gitlab.io.git   True
-11           arb      spin-arb        1          git@gitlab.com:spin-arb/spin-arb.gitlab.io.git   True
-12          reed       qu-reed        3            git@gitlab.com:qu-reed/qu-reed.gitlab.io.git   True
-13          noto       qu-noto        2            git@gitlab.com:qu-noto/qu-noto.gitlab.io.git   True
-14          plot       qu-plot        1            git@gitlab.com:qu-plot/qu-plot.gitlab.io.git   True
-15           doc      spin-doc        2          git@gitlab.com:spin-doc/spin-doc.gitlab.io.git   True
-16          labs       qu-labs        1            git@gitlab.com:qu-labs/qu-labs.gitlab.io.git   True
-```
-
 The next thing we can do (having established that these are now cloned locally) is to read the CI YAML
 as the 'layout' for each site, checking they're valid (according to the
 [reference](https://docs.gitlab.com/ee/ci/yaml/#pages) on YAML configs for GitLab Pages)
@@ -299,27 +273,26 @@ as the 'layout' for each site, checking they're valid (according to the
 ```py
 >>> manifests = ql.yaml_manifests(as_dicts=False)
 >>> for k,m in manifests.items(): print(k, end="\t"); pprint(m)
-spin.systems    SiteCI: PagesJob: {Stage.Deploy, Script <>, Artifacts: paths=['public'], Only: branch=['master']}
-cal     SiteCI: PagesJob: {Stage.Deploy, Script <>, Artifacts: paths=['public'], Only: branch=['master']}
-log     SiteCI: PagesJob: {Stage.Deploy, Script <>, Artifacts: paths=['public'], Only: branch=['master']}
-conf    SiteCI: PagesJob: {Stage.Deploy, Script <docs/>, Artifacts: paths=['public'], Only: branch=['master']}
-pore    SiteCI: PagesJob: {Stage.Deploy, Script <>, Artifacts: paths=['public'], Only: branch=['master']}
-ocu     SiteCI: PagesJob: {Stage.Deploy, Script <>, Artifacts: paths=['public'], Only: branch=['master']}
-arc     SiteCI: PagesJob: {Stage.Deploy, Script <>, Artifacts: paths=['public'], Only: branch=['master']}
-qrx     SiteCI: PagesJob: {Stage.Deploy, Script <>, Artifacts: paths=['public'], Only: branch=['master']}
-erg     SiteCI: PagesJob: {Stage.Deploy, Script <>, Artifacts: paths=['public'], Only: branch=['master']}
-opt     SiteCI: PagesJob: {Stage.Deploy, Script <>, Artifacts: paths=['public'], Only: branch=['master']}
-poll    SiteCI: PagesJob: {Stage.Deploy, Script <>, Artifacts: paths=['public'], Only: branch=['master']}
-arb     SiteCI: PagesJob: {Stage.Deploy, Script <>, Artifacts: paths=['public'], Only: branch=['master']}
-reed    SiteCI: PagesJob: {Stage.Deploy, Script <>, Artifacts: paths=['public'], Only: branch=['master']}
-noto    SiteCI: PagesJob: {Stage.Deploy, Script <>, Artifacts: paths=['public'], Only: branch=['master']}
-plot    SiteCI: PagesJob: {Stage.Deploy, Script <>, Artifacts: paths=['public'], Only: branch=['master']}
-doc     SiteCI: PagesJob: {Stage.Deploy, Script <>, Artifacts: paths=['public'], Only: branch=['master']}
-labs    SiteCI: PagesJob: {Stage.Deploy, Script <>, Artifacts: paths=['public'], Only: branch=['master']}
+spin.systems    SiteCI: PagesJob: {Stage.Deploy, Script <subdirectory='site'>, Artifacts <paths=['public']>, Only <branch=['www']>}
+cal     SiteCI: PagesJob: {Stage.Deploy, Script <subdirectory='site'>, Artifacts <paths=['public']>, Only <branch=['www']>}
+log     SiteCI: PagesJob: {Stage.Deploy, Script <subdirectory='site'>, Artifacts <paths=['public']>, Only <branch=['www']>}
+conf    SiteCI: PagesJob: {Stage.Deploy, Script <subdirectory='site'>, Artifacts <paths=['public']>, Only <branch=['www']>}
+pore    SiteCI: PagesJob: {Stage.Deploy, Script <subdirectory='site'>, Artifacts <paths=['public']>, Only <branch=['www']>}
+ocu     SiteCI: PagesJob: {Stage.Deploy, Script <subdirectory='site'>, Artifacts <paths=['public']>, Only <branch=['www']>}
+arc     SiteCI: PagesJob: {Stage.Deploy, Script <subdirectory='site'>, Artifacts <paths=['public']>, Only <branch=['www']>}
+qrx     SiteCI: PagesJob: {Stage.Deploy, Script <subdirectory='site'>, Artifacts <paths=['public']>, Only <branch=['www']>}
+erg     SiteCI: PagesJob: {Stage.Deploy, Script <subdirectory='site'>, Artifacts <paths=['public']>, Only <branch=['www']>}
+opt     SiteCI: PagesJob: {Stage.Deploy, Script <subdirectory='site'>, Artifacts <paths=['public']>, Only <branch=['www']>}
+poll    SiteCI: PagesJob: {Stage.Deploy, Script <subdirectory='site'>, Artifacts <paths=['public']>, Only <branch=['www']>}
+arb     SiteCI: PagesJob: {Stage.Deploy, Script <subdirectory='site'>, Artifacts <paths=['public']>, Only <branch=['www']>}
+reed    SiteCI: PagesJob: {Stage.Deploy, Script <subdirectory='site'>, Artifacts <paths=['public']>, Only <branch=['www']>}
+noto    SiteCI: PagesJob: {Stage.Deploy, Script <subdirectory='site'>, Artifacts <paths=['public']>, Only <branch=['www']>}
+plot    SiteCI: PagesJob: {Stage.Deploy, Script <subdirectory='site'>, Artifacts <paths=['public']>, Only <branch=['www']>}
+doc     SiteCI: PagesJob: {Stage.Deploy, Script <subdirectory='site'>, Artifacts <paths=['public']>, Only <branch=['www']>}
+labs    SiteCI: PagesJob: {Stage.Deploy, Script <subdirectory='site'>, Artifacts <paths=['public']>, Only <branch=['www']>}
 ```
 
-- The only notable thing here is that `conf` serves its site from the `docs/` subdirectory, the rest do not
-- Obviously these could all be made more elaborate for less trivial scripts, this is a first draft showing basic functionality
+- Obviously these could all be made more elaborate for less trivial scripts, this is a first draft showing basic functionality and to enforce/check standardisation across all repos
 - This setup is deliberately brittle, so any changes will need to be validated in the `fold.yaml_util` module,
   and so the library itself incorporates testing (simple `assert` statements based on a clear expected implementation)
 
@@ -381,36 +354,37 @@ Skipping 'repo_dir=/home/louis/spin/ss/doc' (working tree clean)
 Skipping 'repo_dir=/home/louis/spin/ss/labs' (working tree clean)
 ```
 
-Running `ssm.check_manifest()` again is required to update `ssm.repos_df`
-(this is called rather than a property since it takes a little while
-to calculate, and it'd slow down some operations which don't need it otherwise).
+This function takes a `refspec` argument which indicates a particular path to add and push in each repo,
+a `specific_domains` argument which can be a string of a single domain, or list of multiple,
+and will be evaluated as the list of all domains if left as `None`.
+
+Running `ssm.check_manifest()` again is required to update `ssm.repos_df`.
 
 This `repos_df` dataframe is also useful for comparing whatever
 other properties you might want to check, e.g. which have a README
 
 ```py
 >>> df = ql.ssm.repos_df
->>> df["has_README"] = ["README.md" in [x.name for x in (ql.ns_path / d).iterdir()] for d in
->>> df.domain]
+>>> df["has_README"] = ["README.md" in [x.name for x in (ql.ns_path / d).iterdir()] for d in df.domain]
 >>> df
-          domain     repo_name priority  ... local  clean  has_README
-0   spin.systems  spin-systems        4  ...  True   True       False
-1            cal        qu-cal        3  ...  True   True       False
-2            log      spin-log        4  ...  True   True        True
-3           conf       qu-conf        4  ...  True   True        True
-4           pore       qu-pore        2  ...  True   True       False
-5            ocu   naiveoculus        4  ...  True   True       False
-6            arc     appendens        4  ...  True   True        True
-7            qrx        qu-arx        4  ...  True   True       False
-8            erg      spin-erg        1  ...  True   True       False
-9            opt      spin-opt        1  ...  True   True       False
-10          poll       qu-poll        2  ...  True   True       False
-11           arb      spin-arb        1  ...  True   True       False
-12          reed       qu-reed        3  ...  True   True       False
-13          noto       qu-noto        2  ...  True   True       False
-14          plot       qu-plot        1  ...  True   True        True
-15           doc      spin-doc        2  ...  True   True       False
-16          labs       qu-labs        1  ...  True   True       False
+          domain     repo_name    branches  ... local clean  has_README
+0   spin.systems  spin-systems  master www  ...  True  True        True
+1            cal        qu-cal  master www  ...  True  True       False
+2            log      spin-log  master www  ...  True  True        True
+3           conf       qu-conf  master www  ...  True  True        True
+4           pore       qu-pore  master www  ...  True  True       False
+5            ocu   naiveoculus  master www  ...  True  True        True
+6            arc     appendens  master www  ...  True  True        True
+7            qrx        qu-arx  master www  ...  True  True       False
+8            erg      spin-erg  master www  ...  True  True       False
+9            opt      spin-opt  master www  ...  True  True       False
+10          poll       qu-poll  master www  ...  True  True       False
+11           arb      spin-arb  master www  ...  True  True       False
+12          reed       qu-reed  master www  ...  True  True       False
+13          noto       qu-noto  master www  ...  True  True       False
+14          plot       qu-plot  master www  ...  True  True        True
+15           doc      spin-doc  master www  ...  True  True       False
+16          labs       qu-labs  master www  ...  True  True       False
 ```
 
 Obviously this is the kind of thing to then follow up manually,
@@ -421,59 +395,13 @@ either with an automated commit message or by passing it as the `commit_msg`
 argument to `remote_push_manifest` (which will reuse the same commit message
 if multiple repos are not clean).
 
-```py
->>> ql.ssm.check_manifest()
->>> ql.ssm.repos_df
-          domain     repo_name priority                                            git_url  local  clean
-0   spin.systems  spin-systems        4  git@gitlab.com:spin-systems/spin-systems.gitla...   True   True
-1            cal        qu-cal        3         git@gitlab.com:qu-cal/qu-cal.gitlab.io.git   True   True
-2            log      spin-log        4     git@gitlab.com:spin-log/spin-log.gitlab.io.git   True   True
-3           conf       qu-conf        4       git@gitlab.com:qu-conf/qu-conf.gitlab.io.git   True   True
-4           pore       qu-pore        2       git@gitlab.com:qu-pore/qu-pore.gitlab.io.git   True   True
-5            ocu   naiveoculus        4  git@gitlab.com:naiveoculus/naiveoculus.gitlab....   True   True
-6            arc     appendens        4   git@gitlab.com:appendens/appendens.gitlab.io.git   True   True
-7            qrx        qu-arx        4         git@gitlab.com:qu-arx/qu-arx.gitlab.io.git   True   True
-8            erg      spin-erg        1     git@gitlab.com:spin-erg/spin-erg.gitlab.io.git   True   True
-9            opt      spin-opt        1     git@gitlab.com:spin-opt/spin-opt.gitlab.io.git   True   True
-10          poll       qu-poll        2       git@gitlab.com:qu-poll/qu-poll.gitlab.io.git   True  False
-11           arb      spin-arb        1     git@gitlab.com:spin-arb/spin-arb.gitlab.io.git   True   True
-12          reed       qu-reed        3       git@gitlab.com:qu-reed/qu-reed.gitlab.io.git   True   True
-13          noto       qu-noto        2       git@gitlab.com:qu-noto/qu-noto.gitlab.io.git   True   True
-14          plot       qu-plot        1       git@gitlab.com:qu-plot/qu-plot.gitlab.io.git   True   True
-15           doc      spin-doc        2     git@gitlab.com:spin-doc/spin-doc.gitlab.io.git   True   True
-16          labs       qu-labs        1       git@gitlab.com:qu-labs/qu-labs.gitlab.io.git   True   True
-```
+- Note you can always manually go in and check the `git diff` beforehand
 
-E.g. here `poll` has changes locally to be pushed (I added the first draft of a parliamentary
-transcript), so I add (`all`) and push the changes to the [live website] repo
+## `static`, `src`, and `wire`
 
-- I can manually go in and check the `git diff` beforehand if I want
-
-```py
->>> ql.remote_push_manifest(commit_msg="Wiring through first transmission transcript")
-Skipping 'repo_dir=/home/louis/spin/ss/spin.systems' (working tree clean)
-Skipping 'repo_dir=/home/louis/spin/ss/cal' (working tree clean)
-Skipping 'repo_dir=/home/louis/spin/ss/log' (working tree clean)
-Skipping 'repo_dir=/home/louis/spin/ss/conf' (working tree clean)
-Skipping 'repo_dir=/home/louis/spin/ss/pore' (working tree clean)
-Skipping 'repo_dir=/home/louis/spin/ss/ocu' (working tree clean)
-Skipping 'repo_dir=/home/louis/spin/ss/arc' (working tree clean)
-Skipping 'repo_dir=/home/louis/spin/ss/qrx' (working tree clean)
-Skipping 'repo_dir=/home/louis/spin/ss/erg' (working tree clean)
-Skipping 'repo_dir=/home/louis/spin/ss/opt' (working tree clean)
-Commit [repo_dir=/home/louis/spin/ss/poll] ⠶ Wiring through first transmission transcript
-⇢ Pushing ⠶ origin
-Skipping 'repo_dir=/home/louis/spin/ss/arb' (working tree clean)
-Skipping 'repo_dir=/home/louis/spin/ss/reed' (working tree clean)
-Skipping 'repo_dir=/home/louis/spin/ss/noto' (working tree clean)
-Skipping 'repo_dir=/home/louis/spin/ss/plot' (working tree clean)
-Skipping 'repo_dir=/home/louis/spin/ss/doc' (working tree clean)
-Skipping 'repo_dir=/home/louis/spin/ss/labs' (working tree clean)
-```
-
-After which point there should be a web page under the path
-`wire/20/11/3/oral-evidence_1122.html` i.e.
-[https://poll.spin.systems/wire/20/11/3/oral-evidence_1122.html](https://poll.spin.systems/wire/20/11/3/oral-evidence_1122.html)
+To build all sites with a `src` and/or `static` directory, run `ql.fold.cut.standup()`.
+This builds templates from the `src` folder with `staticjinja`, and the static files
+are just copied over (directly under `site/`).
 
 To build all sites with a wire config, run `ql.fold.wire.standup()`.
 
@@ -593,8 +521,8 @@ though unlike files, paths to directories in this way may not exist
 
 ## TODO
 
-- [ ] A next step could be a class representing the state of the websites [beyond CI], which can
+- [x] A next step could be a class representing the state of the websites [beyond CI], which can
   then be cross-referenced against the `repos_df` (but the goal is not to entirely Python-ise
   the site development, just the management of key aspects to do with the version control on disk)
 - [x] Make a pip installable binary wheel (bdist not currently working with SCM, just sdist)
-- [ ] Make package capable of downloading missing data files in the event it is being distributed
+- [x] Make package capable of downloading missing data files in the event it is being distributed
