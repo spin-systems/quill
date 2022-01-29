@@ -9,7 +9,7 @@ import dateparser
 
 __all__ = ["standup"]
 
-markdowner = markdown.Markdown(output_format="html5")
+markdowner = markdown.Markdown(output_format="html5", extensions=["fenced_code"])
 
 OUT_DIRNAME = "site"
 TEMPLATE_DIRNAME = "src"
