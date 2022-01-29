@@ -9,7 +9,8 @@ import dateparser
 
 __all__ = ["standup"]
 
-markdowner = markdown.Markdown(output_format="html5", extensions=["fenced_code"])
+pymd_extensions = "fenced_code codehilite".split()
+markdowner = markdown.Markdown(output_format="html5", extensions=pymd_extensions)
 
 OUT_DIRNAME = "site"
 TEMPLATE_DIRNAME = "src"
