@@ -25,4 +25,6 @@ quill:
   stage: QL
   script:
   - python3.8 -m pip install "ql"
+  - python3.8 -c "import markdown as md; test_md1 = md.markdown('''\`\`\`sh\nls\n\`\`\`''', extensions=['fenced_code']); print(test_md1)"
+  - python3.8 -c "import markdown as md; test_md2 = md.markdown('''\`\`\`py\nprint(1)\n\`\`\`''', extensions='fenced_code codehilite sane_lists'.split()); print(test_md2)"
   - python3.8 -c "import quill as ql; ql.source_manifest(); ql.fold.cut.standup(); ql.fold.wire.standup(); ql.stash_transfer_site_manifest();"
