@@ -1,13 +1,19 @@
-from ..ns_util import ns, ns_path
-from pathlib import Path
+import logging
 from datetime import datetime as dt
-from staticjinja import Site
 from functools import partial
-import markdown
-import frontmatter
+from pathlib import Path
+
 import dateparser
+import frontmatter
+import markdown
+from staticjinja import Site
+
+from ..ns_util import ns, ns_path
 
 __all__ = ["standup"]
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 pymd_extensions = "fenced_code codehilite sane_lists".split()
 markdowner = markdown.Markdown(output_format="html5", extensions=pymd_extensions)
@@ -33,7 +39,7 @@ def standup(domains_list=None, verbose=True):
                     a for a in post_dir.iterdir() if a.name != "drafts"
                 ]
                 for a in post_dir_sans_drafts:
-                    print(a)
+                    logger.info(f"POST: {a}")
                 post_leaf_dir = Path(POST_DIRNAME)
                 post_ctxs = [
                     (str(post_leaf_dir / a.name), article) for a in post_dir_sans_drafts
@@ -48,7 +54,7 @@ def standup(domains_list=None, verbose=True):
             cut_templates(
                 template_dir=template_dir, out_dir=site_dir, contexts=extra_ctxs
             )
-            print(f"Built {template_dir}")
+            logger.info(f"Built {template_dir}")
 
 
 def fmt_mtime(path_to_file):
@@ -58,7 +64,7 @@ def fmt_mtime(path_to_file):
 
 
 def base(template):
-    print(f"Rendering {template} (base)")
+    logger.info(f"Rendering {template} (base)")
     template_path = Path(template.filename)
     return {
         "template_date": fmt_mtime(template_path),
@@ -66,7 +72,7 @@ def base(template):
 
 
 def index(template):
-    print(f"Rendering {template} (index)")
+    logger.info(f"Rendering {template} (index)")
     return {}
 
 
@@ -129,7 +135,7 @@ def indexed_articles(template, dir_path, with_series=True):
 
 
 def article_series(template, is_path=False):
-    print(f"Rendering {template} (article series)")
+    logger.info(f"Rendering {template} (article series)")
     template_path = template if is_path else Path(template.filename)
     template_index_path = template_path / "index.md"
     if not template_index_path.exists():
@@ -147,7 +153,7 @@ def article_series(template, is_path=False):
 
 
 def article(template, is_path=False):
-    print(f"Rendering {template} (article)")
+    logger.info(f"Rendering {template} (article)")
     template_path = template if is_path else Path(template.filename)
     if template_path.suffix != ".md":
         raise ValueError("Metadata is not supported for non-markdown articles")
@@ -160,7 +166,7 @@ def article(template, is_path=False):
 
 
 def md_context(template):
-    print(f"Rendering {template} (md context)")
+    logger.info(f"Rendering {template} (md context)")
     # markdown_content = Path(template.filename).read_text()
     md_content = frontmatter.load(template.filename)
     return {"post_content_html": markdowner.convert(md_content.content)}
@@ -169,7 +175,7 @@ def md_context(template):
 def render_md(site, template, **kwargs):
     if "/drafts/" in template.name:
         return
-    print(f"Rendering {template} (md)")
+    logger.info(f"Rendering {template} (md)")
     # i.e. posts/post1.md -> build/posts/post1.html
     template_out_as = Path(template.name).relative_to(Path(POST_DIRNAME))
     out_parts = list(template_out_as.parts)
@@ -204,4 +210,7 @@ def cut_templates(template_dir, out_dir, contexts=None, mergecontexts=True):
         outpath=out_dir,
         rules=[(r".*\.md", render_md)],
     )
-    site.render()
+    try:
+        site.render()
+    except:
+        logging.info("Failed to render site", exc_info=True)
