@@ -15,7 +15,7 @@ __all__ = ["standup"]
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-pymd_extensions = "fenced_code codehilite sane_lists".split()
+pymd_extensions = "fenced_code codehilite sane_lists def_list".split()
 markdowner = markdown.Markdown(output_format="html5", extensions=pymd_extensions)
 
 OUT_DIRNAME = "site"
