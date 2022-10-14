@@ -1,11 +1,13 @@
 from configparser import ConfigParser
 
+
 def git_to_https(uri):
     "Convert git URI (for a GitHub SSH repo) to https"
     assert uri.startswith("git"), f"No git SSH repo at {uri}"
-    https = uri.split("@")[1].replace(":","/")
-    https = "https://" + https[:https.rfind(".git")]
+    https = uri.split("@")[1].replace(":", "/")
+    https = "https://" + https[: https.rfind(".git")]
     return https
+
 
 def parse_subdomain_url(ns_path, sd_subpath):
     """

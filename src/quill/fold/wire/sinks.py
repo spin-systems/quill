@@ -6,6 +6,7 @@ from sys import stderr
 
 __all__ = ["QADocSink", "DocSink"]
 
+
 class BaseDocSink:
     def __init__(self, date, src_dir, src_file, verbose=True):
         self._verbose = verbose
@@ -18,7 +19,7 @@ class BaseDocSink:
 
     @property
     def target(self):
-        return Path(self.src_file).stem # i.e. strip .mmd file extension
+        return Path(self.src_file).stem  # i.e. strip .mmd file extension
 
     def emit(self, target_dir):
         self.transform()
@@ -36,9 +37,9 @@ class BaseDocSink:
 
     def transform(self):
         src = mmd(self.src_filepath)
-        listparseconfig={"listclass": "auto", "strict_list_breaks": False}
+        listparseconfig = {"listclass": "auto", "strict_list_breaks": False}
         src = mmd(self.src_filepath, listparseconfig)
-        file_depth = 4 # len(["wire", "yy", "mm", "dd"])
+        file_depth = 4  # len(["wire", "yy", "mm", "dd"])
         self.html_doc = HtmlDoc(
             src,
             depth_from_root=file_depth,
@@ -54,16 +55,20 @@ class BaseDocSink:
         """
         pass
 
+
 class QADocSink(BaseDocSink):
     """
     Shallow subclass of BaseDocSink but pairing up Q&A
     """
+
     qa_pair = True
+
 
 class RadioTranscriptDocSink(BaseDocSink):
     """
     Unchanged from BaseDocSink but will probably modify to suit radio.
     """
+
     pass
 
 
@@ -72,9 +77,10 @@ class RadioTranscriptSummariesDocSink(RadioTranscriptDocSink):
     Summary version of `RadioTranscriptDocSink`, Q&A pairs are transformed
     to become summary and details elements.
     """
+
     qa_pair = True
-    nest_qa_pair_as_summary = True # Q & A will become summary & details
-    #def transform_hook(self):
+    nest_qa_pair_as_summary = True  # Q & A will become summary & details
+    # def transform_hook(self):
     #    # Manually surround pairs of nodes as summary/details
     #    qa_pair_idx_dict = {}
     #    for i, b in enumerate(self.html_doc.doc.blocks):
@@ -89,8 +95,8 @@ class RadioTranscriptSummariesDocSink(RadioTranscriptDocSink):
 
 class DocSink(Enum):
     qa = QADocSink
-    speech = QADocSink # TODO: change
-    slides = QADocSink # TODO: change
-    roundtable = QADocSink # TODO: change
+    speech = QADocSink  # TODO: change
+    slides = QADocSink  # TODO: change
+    roundtable = QADocSink  # TODO: change
     radio_transcript = RadioTranscriptDocSink
     radio_transcript_summaries = RadioTranscriptSummariesDocSink

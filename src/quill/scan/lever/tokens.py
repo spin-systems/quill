@@ -3,6 +3,7 @@ from ...__share__ import classproperty
 
 __all__ = ["tokenise_line", "Prefix", "Suffix", "Node"]
 
+
 def has_precedent(seen, prefix):
     """
     Check if there is a seen node with a given prefix.
@@ -43,7 +44,9 @@ def tokenise_line(line, line_no, block_no, seen=None, config=None):
     ############# End config instantation #############
     seen = seen if seen else []  # avoid default mutable arg gotcha
     penultimate = seen[-1] if seen else None  # directly preceding
-    node = Node(prefix=None, contents=line, suffix=None, line_no=line_no, block_no=block_no)
+    node = Node(
+        prefix=None, contents=line, suffix=None, line_no=line_no, block_no=block_no
+    )
     if line == "":
         node.prefix = Prefix.BlankNode
     elif line.startswith("-:"):
@@ -87,10 +90,10 @@ def tokenise_line(line, line_no, block_no, seen=None, config=None):
         elif line[2] == ",":
             node.prefix = Prefix.ContDesc
     elif line.startswith("-#"):
-        max_header = 8 # 1-based count of header levels
+        max_header = 8  # 1-based count of header levels
         start_at = len(Prefix.Header1.str)
         confirmed_levels = 1
-        for i,l in enumerate(line[start_at : start_at + max_header]):
+        for i, l in enumerate(line[start_at : start_at + max_header]):
             if l != "#":
                 break
             else:
@@ -128,8 +131,8 @@ class Affix(NamedConstant):
             raise KeyError(f"{tok} not a valid Affix token sequence")
         return matched
 
-    #@classproperty
-    #def tokseq2name_dict(cls):
+    # @classproperty
+    # def tokseq2name_dict(cls):
     #    "KEY: the string matched by the token. VAL: the node name."
     #    # N.B. does not assume the token-matching string is unique
     #    d = {k: v._value_ for k,v in Prefix.__members__.items()}
@@ -140,13 +143,11 @@ class Affix(NamedConstant):
         "KEY: the string matched by the token(s). VAL: list of node name(s)."
         # N.B. does not assume the token-matching string is unique
         d = {
-                v._value_: [
-                    k
-                    for k in cls._members_
-                    if cls._members_.get(k)._value_ == v._value_
-                ]
-                for v in cls._members_.values()
-            }
+            v._value_: [
+                k for k in cls._members_ if cls._members_.get(k)._value_ == v._value_
+            ]
+            for v in cls._members_.values()
+        }
         return d
 
     @classmethod
@@ -190,15 +191,15 @@ class Prefix(Affix):
     Therefore = "-:."  # E
     Because = "-:'"  # F
     SectBreak = "-~==~-"  # G_
-    Header1 = "-#" # Ha
-    Header2 = "-##" # Hb
-    Header3 = "-###" # Hc
-    Header4 = "-####" # Hd
-    Header5 = "-#####" # He
-    Header6 = "-######" # Hf
-    Header7 = "-#######" # Hg
-    Header8 = "-########" # Hh
-    BlankNode = "" # Z_
+    Header1 = "-#"  # Ha
+    Header2 = "-##"  # Hb
+    Header3 = "-###"  # Hc
+    Header4 = "-####"  # Hd
+    Header5 = "-#####"  # He
+    Header6 = "-######"  # Hf
+    Header7 = "-#######"  # Hg
+    Header8 = "-########"  # Hh
+    BlankNode = ""  # Z_
 
 
 class Suffix(Affix):
@@ -208,13 +209,16 @@ class Suffix(Affix):
 
     InitList = ":"
 
+
 class Node:
     """
     Provide a simple string-repr while storing the Prefix and Suffix
     as properties (intervening `contents` is just a string for now).
     """
 
-    def __init__(self, prefix=None, contents=None, suffix=None, line_no=None, block_no=None):
+    def __init__(
+        self, prefix=None, contents=None, suffix=None, line_no=None, block_no=None
+    ):
         self.prefix = prefix
         self.contents = contents
         self.suffix = suffix

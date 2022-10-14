@@ -1,5 +1,6 @@
 __all__ = ["create_ns_aliases", "create_routing_table", "create_manifest"]
 
+
 def create_ns_aliases(par):
     file_path = par / "alias.mmd"
     lines = [

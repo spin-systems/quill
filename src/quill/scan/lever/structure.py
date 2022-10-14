@@ -2,6 +2,7 @@ from .tokens import Suffix, Prefix, tokenise_line
 
 __all__ = ["Doc", "BlockDoc", "NodeBlock"]
 
+
 class BlockDoc:
     """
     Document formed by a list of one or more `NodeBlock` elements,
@@ -25,7 +26,7 @@ class BlockDoc:
             else:
                 current_line_block.append(l)
         if current_line_block:
-            self._add_nodeblock(current_line_block, line_no+1, self.n_blocks)
+            self._add_nodeblock(current_line_block, line_no + 1, self.n_blocks)
 
     @property
     def blocks(self):
@@ -42,6 +43,7 @@ class BlockDoc:
     def __repr__(self):
         s = "s" if (self.n_blocks != 1) else ""
         return f"Document of {self.n_blocks} block{s}"
+
 
 class NodeBlock:
     def __init__(self, block_lines, line_no, block_no):
@@ -63,8 +65,10 @@ class NodeBlock:
         return len(self.nodes)
 
     def __repr__(self):
-        return (f"Block {self.number} of {self._nodecount} "
-                f"nodes (L{self.start_line}-L{self.end_line})")
+        return (
+            f"Block {self.number} of {self._nodecount} "
+            f"nodes (L{self.start_line}-L{self.end_line})"
+        )
 
     def tokenise_lines(self, block_lines):
         "Populate nodes property"

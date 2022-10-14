@@ -32,9 +32,7 @@ def clone(url, as_name, wd=ns_path, update_man=True, use_git_mtime=False):
     if use_git_mtime:
         for n in repo.tree().list_traverse():
             filepath = clone_path / n.path
-            unixtime = repo.git.log(
-                "-1", "--format='%at'", "--", n.path
-            ).strip("'")
+            unixtime = repo.git.log("-1", "--format='%at'", "--", n.path).strip("'")
             if not unixtime.isnumeric():
                 raise ValueError(
                     f"git log gave non-numeric timestamp {unixtime} for {n.path}"
@@ -188,6 +186,7 @@ def remote_pull_manifest(specific_domains=None):
         print(f"⇢ Pulling ⠶ {origin.name}", file=stderr)
     ssm.check_manifest()
     return
+
 
 def copy_static_assets(repo_dir, from_name="static", to_name="site", purge=False):
     static_dir = repo_dir / from_name

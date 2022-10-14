@@ -2,6 +2,7 @@ from bs4 import Tag
 
 __all__ = ["node_html_tag", "HtmlBlock", "HtmlDoc"]
 
+
 def node_html_tag(node, line_no=None):
     "Should this be in scan⠶lever"
     pre_name = node.prefix._name_
@@ -37,6 +38,7 @@ def node_html_tag(node, line_no=None):
         t.attrs.update({"id": f"L{line_no}"})
     return t
 
+
 class HtmlBlock:
     def __init__(self, block, lists, qa_pair=False, nested_qa_summary=False):
         self.number = block.number
@@ -52,8 +54,8 @@ class HtmlBlock:
         attrs = {"class": "NodeBlock", "id": f"nb{self.number}", **line_range_dict}
         block_div = Tag(name="div", attrs=attrs)
         # TODO do this properly after rewriting list parsing so end lines are accurate
-        #list_starts = [l.all_nodes[0].start_line for l in self.lists]
-        #list_ends = [l.all_nodes[-1].end_line for l in self.lists]
+        # list_starts = [l.all_nodes[0].start_line for l in self.lists]
+        # list_ends = [l.all_nodes[-1].end_line for l in self.lists]
         if self.qa_pair:
             self.qa_idx_pairs = {}
         for i, n in enumerate(self.nodes):

@@ -1,5 +1,6 @@
 __all__ = ["parse_man_node", "read_man"]
 
+
 def parse_man_node(node, host="gitlab.com", hosting_at="gitlab.io"):
     """
     Parse the ['human-authored'] sub/domain name and ['slugged'] repo name prefix
@@ -7,11 +8,14 @@ def parse_man_node(node, host="gitlab.com", hosting_at="gitlab.io"):
     are treated the same way by this function.
     """
     colsv = node.contents.split(":")[:2]
-    assert len(colsv) == 2, f"Expected 2 colon-separated values, got {len(colsv)} ({node})"
+    assert (
+        len(colsv) == 2
+    ), f"Expected 2 colon-separated values, got {len(colsv)} ({node})"
     domain, repo = colsv
     org = repo
     ref = f"git@{host}:{org}/{repo}.{hosting_at}.git"
     return domain, ref
+
 
 def read_man(man):
     """
@@ -23,6 +27,7 @@ def read_man(man):
     assert man.list, "The manifest MMD should be a single list"
     repo_info = list(map(parse_man_node, man.list.all_nodes))
     return repo_info
+
 
 def read_man_df(man):
     repo_info = read_man(man)

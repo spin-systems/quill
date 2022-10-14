@@ -5,6 +5,7 @@ from ...fold import ns_path
 
 __all__ = ["AddressPath"]
 
+
 class AddressPart(str):
     def __new__(cls, *args, **kw):
         return super().__new__(cls, *args, **kw)
@@ -148,7 +149,7 @@ def interpret_filepath(address_path=None):
     namespace = address_path.namespace
     domain = address_path.domain
     route_query = f"namespace == '{namespace}' and domain == '{domain}'"
-    #route_result = routing_df.query(route_query)
+    # route_result = routing_df.query(route_query)
     custom_route = routing_df.query(route_query).route.item()
     route = custom_route if custom_route else domain
     domain_filepath = (ns_path / route).resolve()
@@ -157,6 +158,7 @@ def interpret_filepath(address_path=None):
     ]
     # Delayed to avoid circular import
     from ...fold.wire import standup
+
     standup_config = standup(domains_list=[domain], dry_config=True, verbose=False)
     if domain in standup_config:
         # The domain is being served, so get the directory from which it is served
@@ -189,7 +191,7 @@ class AddressPath(list):
     def __init__(self, address_str, sep="⠶"):
         self.sep = sep
         self.parts = SeparatedString(address_str, sep=sep)
-    
+
     @property
     def as_str(self, sep=None):
         if sep is None:
@@ -299,6 +301,7 @@ class AddressPath(list):
         if n:
             path_parts.append(str(n))
         return cls(sep.join(path_parts))
+
 
 class SeparatedString(list):
     def __init__(self, sep_str, sep):

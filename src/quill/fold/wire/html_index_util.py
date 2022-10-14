@@ -7,6 +7,7 @@ from collections.abc import Sequence
 
 __all__ = ["IndexNav", "IndexUl", "EmittedIndex", "IntermedDirIndex", "WireIndex"]
 
+
 class BaseIndexPage(HtmlPage):
     def __init__(self, nav, head_params={}):
         head_params["sakura"] = False
@@ -75,26 +76,33 @@ class BaseIndexPage(HtmlPage):
 
 class IndexNav(PartialAttrs):
     "Partially set Attrs wrapper class for index page nav elements"
+
     def __init__(self, attrs):
         self.default_attrs = {"class": "index"}
         super().__init__(attrs)
 
+
 class IndexUl(PartialAttrs):
     "Gratuitous wrapper class (currently doing nothing but may in future)"
+
     def __init__(self, attrs):
-        #self.default_attrs = {}
+        # self.default_attrs = {}
         super().__init__(attrs)
+
 
 class BaseWireIndexPage(BaseIndexPage):
     "Wrapper class to set the nav header text for breadcrumbs"
+
     def __init__(self, *args):
-        self.nav_header_attrs = Attrs({"id": "nav_header", "depth": f"{self.rel_depth}"})
+        self.nav_header_attrs = Attrs(
+            {"id": "nav_header", "depth": f"{self.rel_depth}"}
+        )
         self.create_header()
         super().__init__(*args)
 
     def create_header(self):
         if self.nav_header is not None:
-            return # forbid overwriting nav header by repeated call to this function
+            return  # forbid overwriting nav header by repeated call to this function
         nh_size = 3
         default_bc_attrs = {"crumb_sep": "⠶", "id": "crumbs"}
         bc_attrs = {**default_bc_attrs, **self.breadcrumb_attrs}
@@ -108,13 +116,14 @@ class BaseWireIndexPage(BaseIndexPage):
             else:
                 bc_tuple = (x, Path(*[".."] * (len(self.rel_dir.parts) - i)) / x)
             breadcrumbs.append(bc_tuple)
-        for i,c in enumerate(breadcrumbs):
+        for i, c in enumerate(breadcrumbs):
             t = Tag(name="li")
             if i > 0:
                 t.attrs.update({"separator": crumb_sep})
             t.append(BreadCrumb(*c))
             bc.append(t)
         self.nav_header = NavHeader(nh_size, bc, self.nav_header_attrs)
+
 
 class EmittedIndex(BaseWireIndexPage):
     def __init__(self, files, rel_dir, head_params={}):
@@ -133,6 +142,7 @@ class EmittedIndex(BaseWireIndexPage):
             pass
         return fstr.replace("_", " ").replace("-", " ")
 
+
 class IntermedDirIndex(BaseWireIndexPage):
     def __init__(self, subdirs, rel_dir, head_params={}):
         self.rel_dir = Path("wire") / rel_dir
@@ -141,14 +151,15 @@ class IntermedDirIndex(BaseWireIndexPage):
         ul_params = IndexUl({"id": "index", "class": f"lvl_{self.rel_depth}"})
         dirnames = list(map(self.process_dirname, subdirs))
         nav = NavLinkList(dirnames, subdirs, nav_params, ul_params)
-        #self.nav_header_attrs = Attrs({"class": "breadcrumbs bc_intermed"})
+        # self.nav_header_attrs = Attrs({"class": "breadcrumbs bc_intermed"})
         super().__init__(nav)
-        #self.nav_header.string = " ⠶ dir_beep_boop" # breadcrumbs go here
-        #self.nav_header.append(" ...beep boop?")
+        # self.nav_header.string = " ⠶ dir_beep_boop" # breadcrumbs go here
+        # self.nav_header.append(" ...beep boop?")
 
     @staticmethod
     def process_dirname(d):
         return str(d)
+
 
 class WireIndex(BaseWireIndexPage):
     def __init__(self, subdirs, rel_dir, head_params={}):
@@ -160,7 +171,7 @@ class WireIndex(BaseWireIndexPage):
         dirnames = list(map(self.process_dirname, subdirs))
         nav = NavLinkList(dirnames, subdirs, nav_params, ul_params, link_params)
         super().__init__(nav)
-        #self.nav_header.append(" ...beep boop?")
+        # self.nav_header.append(" ...beep boop?")
 
     @staticmethod
     def process_dirname(d):

@@ -4,13 +4,14 @@ from collections.abc import Sequence
 from .html_elem_util import MetaTag
 from .transforms import HtmlBlock
 
+
 class HtmlPage:
     universal_stylesheet_href = "https://spin.systems/stylesheets/sakura-earthly.css"
 
     def __init__(self, content, depth_from_root, head_params={}):
         self.preamble = "<!doctype html>\n"
         self.content = content
-        self.depth = depth_from_root # this is duplicated in BaseIndexPage, oops...
+        self.depth = depth_from_root  # this is duplicated in BaseIndexPage, oops...
         self.head = self.make_head(**head_params)
 
     def as_str(self):
@@ -22,7 +23,7 @@ class HtmlPage:
         for c in c_tags:
             body.append(c)
         html.append(body)
-        return self.preamble + str(html)#.prettify()
+        return self.preamble + str(html)  # .prettify()
 
     @property
     def _default_css_param(self):
@@ -48,13 +49,16 @@ class HtmlPage:
         # Add Sakura to all pages
         css_hrefs = [self.universal_stylesheet_href] if sakura else []
         for css_filename in css:
-            css_hrefs.append(str(Path(*[".."] * self.depth) / "css" / f"{css_filename}.css"))
+            css_hrefs.append(
+                str(Path(*[".."] * self.depth) / "css" / f"{css_filename}.css")
+            )
             # all other stylesheets live in the css directory under the site root
         for css_href in css_hrefs:
             css_attrs = {"rel": "stylesheet", "href": css_href}
             style = Tag(name="link", attrs=css_attrs, can_be_empty_element=True)
             head.append(style)
         return head
+
 
 class HtmlDoc(HtmlPage):
     def __init__(self, doc, depth_from_root, qa_pair=False, nested_qa_summary=False):
@@ -73,7 +77,7 @@ class HtmlDoc(HtmlPage):
         article = self.process_article()
         body.append(article)
         html.append(body)
-        return self.preamble + str(html)#.prettify()
+        return self.preamble + str(html)  # .prettify()
 
     def process_article(self):
         article = Tag(name="article")
@@ -92,5 +96,5 @@ class HtmlDoc(HtmlPage):
             ).as_soup()
             article.append(block_html)
             for l in assignable_lists:
-                unassigned_lists.pop(0) # pop only after iterating over
+                unassigned_lists.pop(0)  # pop only after iterating over
         return article

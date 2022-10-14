@@ -2,10 +2,12 @@ from .elems import BaseElem
 
 __all__ = ["BlockElem", "BlockList"]
 
+
 class BlockElem(BaseElem):
     "Base class for any block-level element."
-    #def __init__(self, nodelist):
+    # def __init__(self, nodelist):
     #    super().__init__(nodelist)
+
 
 class BlockList(BlockElem):
     """
@@ -15,8 +17,9 @@ class BlockList(BlockElem):
     If initialised in the midst of a different element type, pass its
     element type (block- or doc-level) through `parent_elem` argument.
     """
+
     def __init__(self, nodes, header=None, parent_elem=None):
-        super().__init__(nodes) # once sublist of nodes determined
+        super().__init__(nodes)  # once sublist of nodes determined
         self.header = header
         self.parent_elem = parent_elem
 

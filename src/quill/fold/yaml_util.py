@@ -98,7 +98,9 @@ def change_build_dir(domain, new_name, mv=True, yaml_filename=YAML_FNAME):
             assert not new_build_path.exists(), f"{new_build_path=!s} already exists!"
             new_build_path.mkdir()
             # do not move "hidden" files (those whose filenames begin with a period)
-            movable_files = [x for x in local_path.iterdir() if not x.name.startswith(".")]
+            movable_files = [
+                x for x in local_path.iterdir() if not x.name.startswith(".")
+            ]
             for source in movable_files:
                 if source.is_dir() and source.name == new_name:
                     continue  # cannot move the new directory into itself!

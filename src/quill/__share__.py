@@ -10,6 +10,7 @@ class classproperty(property):
     def __get__(self, cls, owner):
         return classmethod(self.fget).__get__(None, owner)()
 
+
 class MonthEnum(IntEnum):
     jan = 1
     feb = 2
@@ -24,7 +25,8 @@ class MonthEnum(IntEnum):
     nov = 11
     dec = 12
 
-num2month_dict = dict([(x,y.name) for x,y in MonthEnum._value2member_map_.items()])
 
-num2alphanum_monthdict = {k: f"{k:02}{v}" for k,v in num2month_dict.items()}
-alphanum2num_monthdict = {v: k for k,v in num2alphanum_monthdict.items()}
+num2month_dict = dict([(x, y.name) for x, y in MonthEnum._value2member_map_.items()])
+
+num2alphanum_monthdict = {k: f"{k:02}{v}" for k, v in num2month_dict.items()}
+alphanum2num_monthdict = {v: k for k, v in num2alphanum_monthdict.items()}

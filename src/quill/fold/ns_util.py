@@ -7,6 +7,7 @@ from sys import stderr
 
 __all__ = ["ns", "ns_path"]
 
+
 def resolve_ns_path(qp=ql_path, ini_fn="spin.ini"):
     c = ConfigParser()
     with open(qp / ini_fn, "r") as f:
@@ -15,7 +16,7 @@ def resolve_ns_path(qp=ql_path, ini_fn="spin.ini"):
     dir_name = c.get("PARENT", "dir_name")
     ### This part is all about standardising whether local or distributed
     home_spin = Path.home() / "spin"
-    home_is_setup = (qp / Path(*[".."]*3)).resolve() == home_spin
+    home_is_setup = (qp / Path(*[".."] * 3)).resolve() == home_spin
     if home_is_setup:
         ns_p = (qp / rel_level / dir_name).resolve()
         pre_existing_ns_p = True
@@ -33,11 +34,13 @@ def resolve_ns_path(qp=ql_path, ini_fn="spin.ini"):
             create_manifest(ns_p)
     return ns_p, pre_existing_ns_p
 
+
 def read_ns(qp=ql_path, ini_fn="spin.ini"):
     ns_p, pre_existing_ns_p = resolve_ns_path(qp, ini_fn)
     ns_subdirs = [d.name for d in ns_p.iterdir() if d.is_dir()]
     ns = {k: parse_subdomain_url(ns_p, k) for k in ns_subdirs}
     return ns, pre_existing_ns_p
+
 
 class NameSpaceDict(dict):
     def __init__(self):
@@ -49,5 +52,6 @@ class NameSpaceDict(dict):
             self.clear()
             self.update(fresh)
 
-ns = NameSpaceDict() #NameSpace()
+
+ns = NameSpaceDict()  # NameSpace()
 ns_path, pre_existing_ns_p = resolve_ns_path()

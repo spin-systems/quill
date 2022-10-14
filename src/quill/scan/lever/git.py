@@ -1,6 +1,7 @@
 from ...fold.ns_util import ns_path
 from git import Repo
 
+
 def _has_clean_wt(domain, add_before_check=True):
     """
     Helper function (TODO: move to a dedicated git module)
@@ -13,9 +14,9 @@ def _has_clean_wt(domain, add_before_check=True):
     is_clean = not repo.is_dirty()
     return is_clean
 
+
 def _active_branch(domain):
     "Return the string name of the active branch of the repo."
     repo = Repo(ns_path / domain)
     active_branch = repo.active_branch.name
     return active_branch
-

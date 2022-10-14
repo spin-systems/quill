@@ -6,16 +6,19 @@ from os import sep as os_sep
 
 SubclassablePathType = type(Path())
 
+
 def check_yaml(yaml_dict, keys):
     "Validate keys of the YAML dict for a GitLab Pages CI config."
     for k in keys:
         assert k in yaml_dict, f"YAML missing key: '{k}'"
 
+
 class Stage(Enum):
     "There are multiple possible stages but I think GLP just uses 'deploy'."
-    #Build = "build"
-    #Test = "test"
+    # Build = "build"
+    # Test = "test"
     Deploy = "deploy"
+
 
 class Cmd(Enum):
     """
@@ -24,10 +27,12 @@ class Cmd(Enum):
     using "{}" which will be parsed by `parse` from the package `parse`, described
     as 'the opposite of format()' i.e. like f-strings in reverse.
     """
+
     Mk = "mkdir .public"
     Cp = "cp -r {}* .public"
     Mv = "mv .public public"
     Cu = "curl -X POST -F token={} -F ref={} https://gitlab.com/api/v4/projects/{}/trigger/pipeline"
+
 
 class TemplateVarMixIn:
     def set_configured_var_name(self, var_name):
@@ -48,12 +53,15 @@ class TemplateVarMixIn:
         configured_str = self.configure_var_str(configured_var)
         return configured_str
 
+
 class NewTemplateVarMixIn(TemplateVarMixIn):
     def __new__(cls, val):
         return type(super()).__new__(cls, val)
 
+
 class StrTV(str, NewTemplateVarMixIn):
     pass
+
 
 class PathTV(SubclassablePathType, NewTemplateVarMixIn):
     @staticmethod
@@ -65,21 +73,23 @@ class PathTV(SubclassablePathType, NewTemplateVarMixIn):
         configured_str = f"{configured_var}{os_sep}" if configured_var else ""
         return configured_str
 
+
 class FmtCmd(dict):
     """
     A formatted template will take a string such as:
 
       "Hello {}, the date today is {} the {} of {}, {}."
-    
+
     along with 1 or more [in this case 5] variable parts, each of which
     has a name, indicated by the keys of a dict. In this case it'd be:
-    
+
       ["name", "day_of_week", "day_of_month", "month", "year"]
 
     The values corresponding to these keys in the dict would be `StrTV`
     objects, initialised with 2 pieces of info: the templated string and the
     callable to be applied after it has been parsed (or alternatively `None`).
     """
+
     def __init__(self, cmd, d):
         self._cmd = cmd
         self._key, *self._keys = d
@@ -91,10 +101,10 @@ class FmtCmd(dict):
 
     @property
     def formatted_cmd(self):
-        cmd = self._cmd.value # template string (from the Cmd enum)
-        vals = self.configured_values.values() # set by Script.parse on __init__
+        cmd = self._cmd.value  # template string (from the Cmd enum)
+        vals = self.configured_values.values()  # set by Script.parse on __init__
         # vals is a list of either: None (no match), or TemplateVarMixIn-inheritor
-        #strings = [v.as_str if v else "" for v in vals]
+        # strings = [v.as_str if v else "" for v in vals]
         strings = []
         formatted = cmd.format(*[v.as_str if v else "" for v in vals])
         return formatted
@@ -103,19 +113,25 @@ class FmtCmd(dict):
         for k, val in zip(self, val_list):
             if val:
                 template_var = val
-                template_var.set_configured_var_name(k) # not needed, just for debugging
+                template_var.set_configured_var_name(
+                    k
+                )  # not needed, just for debugging
                 template_var.set_configured_value(val)
-        self._configured_values = dict(zip(self, val_list)) # {var_name:TemplateVarMixIn}
+        self._configured_values = dict(
+            zip(self, val_list)
+        )  # {var_name:TemplateVarMixIn}
 
     @property
     def configured_values(self):
         return self._configured_values
+
 
 class Script:
     """
     The script (list of commands) to run, relating to serving files from a
     single directory (which must be named 'public').
     """
+
     def __init__(self, cmd_list, pages=True):
         self.cfg = {}
         self.templates = self.pages_templates if pages else self.trigger_templates
@@ -124,19 +140,17 @@ class Script:
 
     pages_templates = {
         Cmd.Mk: None,
-        Cmd.Cp: {
-            "subdirectory": PathTV
-        },
+        Cmd.Cp: {"subdirectory": PathTV},
         Cmd.Mv: None,
     }
     trigger_templates = {
-        Cmd.Cu: ["token", "ref", "project_id"], # will default to TemplateVar callback
+        Cmd.Cu: ["token", "ref", "project_id"],  # will default to TemplateVar callback
     }
 
     def parse(self, commands, default_callback=StrTV):
         for i, command in enumerate(commands):
             template_cmd = [*self.templates][i]
-            d = self.templates.get(template_cmd) # indicates how to interpret template
+            d = self.templates.get(template_cmd)  # indicates how to interpret template
             if d:
                 # Extract the variable command from template_cmd and parse against
                 # command (i.e. the full string from file) applying any callback
@@ -144,8 +158,8 @@ class Script:
                     # Check if type(d) is list, apply default callback if so
                     d = {k: default_callback for k in d}
                     # Change it so you can reuse it later (in `as_list`) as a dict
-                    self.templates[template_cmd] = d # template_cmd used as dict key
-                fmt = FmtCmd(template_cmd, d) # store template_cmd as attrib on d
+                    self.templates[template_cmd] = d  # template_cmd used as dict key
+                fmt = FmtCmd(template_cmd, d)  # store template_cmd as attrib on d
                 self.parse_formatted_template(fmt, command)
                 fmt.set_configured_values([self.cfg.get(k) for k in fmt])
                 self.parsed_templates.append(fmt)
@@ -164,10 +178,12 @@ class Script:
             if len(fmt) == 1:
                 vals = [None]
             else:
-                e_msg = ("Cannot distinguish empty values for a command template"
-                " with multiple variable parts.\nTODO: handle if needed, i.e. if "
-                "multiple parts can vary and it is valid for them to potentially be "
-                "empty (for now it is invalid for any of the multi-parts to be blank)")
+                e_msg = (
+                    "Cannot distinguish empty values for a command template"
+                    " with multiple variable parts.\nTODO: handle if needed, i.e. if "
+                    "multiple parts can vary and it is valid for them to potentially be "
+                    "empty (for now it is invalid for any of the multi-parts to be blank)"
+                )
                 raise NotImplementedError(e_msg)
                 # Previously the code below ran, but this cannot distinguish one from
                 # multiple empty/missing values, and will 'blank' the provided ones too
@@ -175,7 +191,7 @@ class Script:
         for val, (k, callback) in zip(vals, fmt.items()):
             assert k not in self.cfg, "Key {k} already seen: aborting! Oh no!"
             if val and callable(callback):
-                val = callback(val) # call the supplied function on the parsed value
+                val = callback(val)  # call the supplied function on the parsed value
             self.cfg.update({k: val})
 
     @property
@@ -194,14 +210,16 @@ class Script:
     def __repr__(self):
         if not (subdir := self.cfg.get("subdirectory")):
             subdir = ""
-        script_repr = " ".join(f"{k}='{v}'" for k,v in self.cfg.items())
+        script_repr = " ".join(f"{k}='{v}'" for k, v in self.cfg.items())
         return f"Script <{script_repr}>"
+
 
 class Artifacts:
     """
     Build artifacts means things not tracked by git to be attached,
     i.e. the 'public' directory created during the Pages build.
     """
+
     def __init__(self, yaml_dict):
         assert "paths" in yaml_dict, "No paths artifact"
         paths = ["public"]
@@ -217,8 +235,10 @@ class Artifacts:
         paths = self.paths
         return f"{cls} <{paths=}>"
 
+
 class Only:
     "Only run on the given `branch` (default 'master')."
+
     def __init__(self, yaml_entry, branch="master"):
         assert yaml_entry == [branch], f"No path artifact {branch}"
         self.branch = [branch]
@@ -228,8 +248,10 @@ class Only:
         branch = self.branch
         return f"{cls} <{branch=}>"
 
+
 class PagesJob:
     "Required to build GitLab Pages: validates YAML and stores as object"
+
     def __init__(self, yaml_dict, branch="www"):
         check_yaml(yaml_dict, ["stage", "script", "artifacts", "only"])
         self.stage = Stage(yaml_dict.get("stage"))
@@ -243,19 +265,21 @@ class PagesJob:
             "stage": self.stage.value,
             "script": self.script.as_list,
             "artifacts": self.artifacts.as_dict,
-            "only": self.only.branch
+            "only": self.only.branch,
         }
         return d
-    
+
     def __repr__(self):
         cls = self.__class__.__name__
         return f"{cls}: {{{self.stage}, {self.script}, {self.artifacts}, {self.only}}}"
+
 
 class TriggerQuillJob:
     """
     Required to push the built site to the www branch via quill repo CI: validates YAML
     and stores as object
     """
+
     def __init__(self, yaml_dict, branch="master"):
         check_yaml(yaml_dict, ["stage", "script", "only"])
         self.stage = Stage(yaml_dict.get("stage"))
@@ -267,16 +291,18 @@ class TriggerQuillJob:
         d = {
             "stage": self.stage.value,
             "script": self.script.as_list,
-            "only": self.only.branch
+            "only": self.only.branch,
         }
         return d
-    
+
     def __repr__(self):
         cls = self.__class__.__name__
         return f"{cls}: {{{self.stage}, {self.script}, {self.only}}}"
 
+
 class SiteCI:
     "Representing (and validating) a `gitlab-ci.yml` config deployed to GitLab Pages."
+
     def __init__(self, yaml_dict):
         check_yaml(yaml_dict, ["trigger_quill", "pages"])
         self.quill_trigger = TriggerQuillJob(yaml_dict.get("trigger_quill"))
@@ -296,7 +322,10 @@ class SiteCI:
 
     @property
     def as_dict(self):
-        return {"trigger_quill": self.quill_trigger.as_dict, "pages": self.pages.as_dict}
+        return {
+            "trigger_quill": self.quill_trigger.as_dict,
+            "pages": self.pages.as_dict,
+        }
 
     @property
     def as_yaml(self):

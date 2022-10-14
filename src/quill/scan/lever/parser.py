@@ -9,18 +9,21 @@ from .git import _has_clean_wt, _active_branch
 
 __all__ = ["Doc"]
 
+
 class PartsList(list):
     """
     Simple list class which provides a pandas DataFrame method which will be
     bound to the `Doc` instance (via a descriptor).
     """
+
     def __init__(self, parts, part_keys=None):
         self.extend(parts)
         self.part_keys = part_keys
 
     def as_df(self):
-        datadict = {k: [n[i] for n in self] for (i,k) in enumerate(self.part_keys)}
+        datadict = {k: [n[i] for n in self] for (i, k) in enumerate(self.part_keys)}
         return DataFrame.from_dict(datadict)
+
 
 class Doc(BlockDoc):
     def __init__(self, lines, listparseconfig=None):
@@ -32,7 +35,9 @@ class Doc(BlockDoc):
         elif "sep" in listparseconfig and "listclass" not in listparseconfig:
             # helper: do not require passing the list class itself, assume it from `sep`
             sep_listconfig_keys = ["sep", "headersep", "labels"]
-            cfg = {k:v for (k,v) in listparseconfig.items() if k in sep_listconfig_keys}
+            cfg = {
+                k: v for (k, v) in listparseconfig.items() if k in sep_listconfig_keys
+            }
             for k in sep_listconfig_keys:
                 if k in listparseconfig:
                     del listparseconfig[k]
@@ -47,10 +52,11 @@ class Doc(BlockDoc):
     def _parse(self, listparseconfig=None):
         "May add other configs later, but for now just wrap the lists method."
         # populate the `lists` property by parsing all blocks' nodes
-        self._parse_lists(**listparseconfig) # expand out dict as named arguments
+        self._parse_lists(**listparseconfig)  # expand out dict as named arguments
 
-    def _parse_lists(self, listclass=None, part_keys=None, listconfig=None,
-            strict_list_breaks=True):
+    def _parse_lists(
+        self, listclass=None, part_keys=None, listconfig=None, strict_list_breaks=True
+    ):
         """
         Note that for separator-delimited lists, `labels` (in `listconfig`) is for
         setting the names of node attributes of each delimited value, while
@@ -69,11 +75,14 @@ class Doc(BlockDoc):
         if listclass is SepBlockList:
             pk = part_keys
             # N.B. maybe use an Enum rather than have to pass actual class?
-            self.all_parts = PartsList([
-                n.parts
-                for l in self.lists
-                for n in (l.all_nodes if l.has_sep_header else l.nodes)
-            ], part_keys=pk)
+            self.all_parts = PartsList(
+                [
+                    n.parts
+                    for l in self.lists
+                    for n in (l.all_nodes if l.has_sep_header else l.nodes)
+                ],
+                part_keys=pk,
+            )
         # TODO: wasteful to store nodes twice: just store index for header/list items
 
     @property
@@ -111,4 +120,8 @@ class Doc(BlockDoc):
         domains = self.repos_df.domain
         self.repos_df["branch"] = [_active_branch(d) for d in domains]
         self.repos_df["local"] = [domain in ns for domain in domains]
-        self.repos_df["clean"] = [_has_clean_wt(d, add_before_check=add_before_check) for d in domains if d in ns]
+        self.repos_df["clean"] = [
+            _has_clean_wt(d, add_before_check=add_before_check)
+            for d in domains
+            if d in ns
+        ]
