@@ -15,8 +15,17 @@ __all__ = ["standup"]
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-pymd_extensions = "fenced_code codehilite sane_lists def_list admonition toc".split()
-markdowner = markdown.Markdown(output_format="html5", extensions=pymd_extensions)
+pymd_extensions = (
+    "fenced_code codehilite sane_lists def_list admonition toc markdown_katex".split()
+)
+extension_configs = {
+    "markdown_katex": {"no_inline_svg": True, "insert_fonts_css": False},
+}
+markdowner = markdown.Markdown(
+    output_format="html5",
+    extensions=pymd_extensions,
+    extension_configs=extension_configs,
+)
 
 OUT_DIRNAME = "site"
 TEMPLATE_DIRNAME = "src"
@@ -158,18 +167,24 @@ def article(template, is_path=False):
     if template_path.suffix != ".md":
         raise ValueError("Metadata is not supported for non-markdown articles")
     md_content = frontmatter.load(template_path)
-    metadata = md_content.metadata
+    # Introduces second pass on every markdown (to check for KaTeX markup)
+    html_content = convert_markdown(md_content.content)
+    has_katex = """<span class="katex">""" in html_content
+    metadata = {**md_content.metadata, "katex": has_katex}
     required_keys = {"title", "desc", "date"}
     if not all(k in metadata for k in required_keys):
         raise ValueError(f"{template=} missing one or more of {required_keys=}")
     return {"url": template_path.stem, "mtime": fmt_mtime(template_path), **metadata}
 
 
+def convert_markdown(markdown: str):
+    return markdowner.convert(md_content.content)
+
+
 def md_context(template):
     logger.info(f"Rendering {template} (md context)")
-    # markdown_content = Path(template.filename).read_text()
     md_content = frontmatter.load(template.filename)
-    return {"post_content_html": markdowner.convert(md_content.content)}
+    return {"post_content_html": convert_markdown(md_content.content)}
 
 
 def render_md(site, template, **kwargs):
