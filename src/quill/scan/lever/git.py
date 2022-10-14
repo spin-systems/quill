@@ -1,5 +1,6 @@
-from ...fold.ns_util import ns_path
 from git import Repo
+
+from ...fold.ns_util import ns_path
 
 
 def _has_clean_wt(domain, add_before_check=True):

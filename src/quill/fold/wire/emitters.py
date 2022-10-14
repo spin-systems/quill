@@ -1,17 +1,19 @@
-from os import walk
-from sys import stderr
-from itertools import chain
-from pathlib import Path
 from enum import Enum
-from ...scan.io import mmd
 from functools import partial
-from .html_page_util import HtmlDoc, HtmlPage
-from .html_util import Attrs, PartialAttrs, CustomHtmlTag
-from .html_index_util import EmittedIndex, IntermedDirIndex, WireIndex
-from .sinks import DocSink
-from ..yaml_util import get_yaml_manifest
-from ...__share__ import alphanum2num_monthdict
+from itertools import chain
+from os import walk
+from pathlib import Path
+from sys import stderr
+
 from bs4 import Tag
+
+from ...__share__ import alphanum2num_monthdict
+from ...scan.io import mmd
+from ..yaml_util import get_yaml_manifest
+from .html_index_util import EmittedIndex, IntermedDirIndex, WireIndex
+from .html_page_util import HtmlDoc, HtmlPage
+from .html_util import Attrs, CustomHtmlTag, PartialAttrs
+from .sinks import DocSink
 
 __all__ = ["BaseEmitter", "Emitter"]
 

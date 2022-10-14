@@ -1,11 +1,12 @@
-from .structure import BlockDoc
+from pandas import DataFrame
+
+from ...fold.ns_util import ns
+from ...manifest.parsing import read_man, read_man_df
 from .blockelems import *  # temporary
 from .docelems import DocLists
-from .lists import parse_nodes_to_list, BlockList, SepBlockList
-from pandas import DataFrame
-from ...manifest.parsing import read_man, read_man_df
-from ...fold.ns_util import ns
-from .git import _has_clean_wt, _active_branch
+from .git import _active_branch, _has_clean_wt
+from .lists import BlockList, SepBlockList, parse_nodes_to_list
+from .structure import BlockDoc
 
 __all__ = ["Doc"]
 

@@ -178,7 +178,7 @@ def article(template, is_path=False):
 
 
 def convert_markdown(markdown: str):
-    return markdowner.convert(md_content.content)
+    return markdowner.convert(markdown)
 
 
 def md_context(template):

@@ -1,7 +1,8 @@
+from pandas import concat
+
 from ...fold import ns_path
 from ...manifest.namings import alias_df
 from ..io import mmd
-from pandas import concat
 
 __all__ = ["routing_df"]
 

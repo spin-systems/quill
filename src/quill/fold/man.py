@@ -1,7 +1,8 @@
-from pandas import merge, concat
+from pandas import concat, merge
+
+from ..fold.ns_util import ns_path
 from ..manifest.man import ssm
 from ..manifest.namings import alias_df
-from ..fold.ns_util import ns_path
 
 __all__ = ["write_man_README"]
 

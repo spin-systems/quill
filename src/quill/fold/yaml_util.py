@@ -1,9 +1,11 @@
-from yaml import load, Loader
-from .ns_util import ns_path, ns
-from .site_yaml import SiteCI
-from ..manifest.man import ssm
-from sys import stderr
 from pathlib import Path
+from sys import stderr
+
+from yaml import Loader, load
+
+from ..manifest.man import ssm
+from .ns_util import ns, ns_path
+from .site_yaml import SiteCI
 
 __all__ = ["yaml2dict", "yaml_manifests", "get_yaml_manifest", "change_build_dir"]
 

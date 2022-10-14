@@ -1,8 +1,9 @@
-from pathlib import Path
 from enum import Enum
-from .html_page_util import HtmlDoc
-from ...scan.io import mmd
+from pathlib import Path
 from sys import stderr
+
+from ...scan.io import mmd
+from .html_page_util import HtmlDoc
 
 __all__ = ["QADocSink", "DocSink"]
 

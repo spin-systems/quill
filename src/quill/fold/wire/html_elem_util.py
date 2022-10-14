@@ -1,4 +1,5 @@
 from bs4 import Tag
+
 from .html_util import CustomHtmlTag
 
 __all__ = ["NavLinkList", "UlLinkList", "MetaTag"]

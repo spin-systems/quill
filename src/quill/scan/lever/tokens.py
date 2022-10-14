@@ -1,4 +1,5 @@
 from aenum import NamedConstant
+
 from ...__share__ import classproperty
 
 __all__ = ["tokenise_line", "Prefix", "Suffix", "Node"]
@@ -30,7 +31,7 @@ def tokenise_line(line, line_no, block_no, seen=None, config=None):
     specify `custom_config` dict to override defaults from
     `lever_config_dict`.
     """
-    ############ Begin config instantation ###########
+    # Begin config instantation
     default_config = lever_config_dict()
     if config:
         # Only allow custom config keys also present in default_config dict
@@ -38,10 +39,10 @@ def tokenise_line(line, line_no, block_no, seen=None, config=None):
         config = {**default_config, **config}  # override default config
     else:
         config = default_config
-    ############## Read config variables ##############
+    # Read config variables
     # TODO: just read into locals if config gets any more complicated
     ALLOW_LIST_WITHOUT_SUFFIX_INIT = config.get("ALLOW_LIST_WITHOUT_SUFFIX_INIT")
-    ############# End config instantation #############
+    # End config instantation
     seen = seen if seen else []  # avoid default mutable arg gotcha
     penultimate = seen[-1] if seen else None  # directly preceding
     node = Node(
@@ -123,7 +124,7 @@ class Affix(NamedConstant):
         IN: the string matched by the token. OUT: the node name or
         a list of names if the token name is not unique.
         """
-        matches = cls.tokseq2name_multidict.get(tok)
+        matched = cls.tokseq2name_multidict.get(tok)
         if matched:
             if len(matched) == 1:
                 [matched] = matched

@@ -1,6 +1,6 @@
-from .tokens import Suffix, Prefix, tokenise_line
+from .tokens import Prefix, Suffix, tokenise_line
 
-__all__ = ["Doc", "BlockDoc", "NodeBlock"]
+__all__ = ["BlockDoc", "NodeBlock"]
 
 
 class BlockDoc:

@@ -1,6 +1,7 @@
+from pandas import DataFrame
+
 from .blockelems import BlockList
 from .tokens import Prefix, Suffix
-from pandas import DataFrame
 
 __all__ = ["parse_nodes_to_list", "SepBlockList"]
 
@@ -103,6 +104,7 @@ class SepBlockList(BlockList):
             assert self.header, "Cannot parse header: list is unheadered"
             header_offset = 0
             if sep_header_labels:
+                n_labels = len(sep_header_labels)
                 labsetcount = len(set(sep_header_labels))
                 labsetcheck = labsetcount == labsetcount
                 assert labsetcheck, f"{n_labels} labels =/= {labsetcount} values"

@@ -1,7 +1,7 @@
-from .ns_util import *
 from .cut import *
 from .git import *
 from .man import *
+from .ns_util import *
 from .wire import *
 from .yaml_util import *
 

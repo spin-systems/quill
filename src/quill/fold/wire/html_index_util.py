@@ -1,9 +1,11 @@
-from bs4 import Tag
+from collections.abc import Sequence
 from pathlib import Path
+
+from bs4 import Tag
+
+from .html_elem_util import BreadCrumb, NavHeader, NavLinkList
 from .html_page_util import HtmlPage
 from .html_util import Attrs, PartialAttrs
-from .html_elem_util import NavLinkList, NavHeader, BreadCrumb
-from collections.abc import Sequence
 
 __all__ = ["IndexNav", "IndexUl", "EmittedIndex", "IntermedDirIndex", "WireIndex"]
 

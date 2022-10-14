@@ -1,9 +1,10 @@
-from ..__share__ import ql_path
 from configparser import ConfigParser
-from .subdomain import parse_subdomain_url
-from .distrib_setup import create_ns_aliases, create_routing_table, create_manifest
 from pathlib import Path
 from sys import stderr
+
+from ..__share__ import ql_path
+from .distrib_setup import create_manifest, create_ns_aliases, create_routing_table
+from .subdomain import parse_subdomain_url
 
 __all__ = ["ns", "ns_path"]
 

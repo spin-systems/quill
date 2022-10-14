@@ -1,6 +1,8 @@
-from pathlib import Path
-from bs4 import BeautifulSoup, Tag
 from collections.abc import Sequence
+from pathlib import Path
+
+from bs4 import BeautifulSoup, Tag
+
 from .html_elem_util import MetaTag
 from .transforms import HtmlBlock
 

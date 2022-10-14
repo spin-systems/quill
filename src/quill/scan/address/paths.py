@@ -1,7 +1,8 @@
-from ...manifest.namings import alias_df
 from enum import Enum, IntEnum
-from .routing import routing_df
+
 from ...fold import ns_path
+from ...manifest.namings import alias_df
+from .routing import routing_df
 
 __all__ = ["AddressPath"]
 
@@ -141,10 +142,8 @@ def pop_part(part_list):
         return e
 
 
-def interpret_filepath(address_path=None):
-    if address_path is None:
-        address_path = example_path
-    elif type(address_path) is str:
+def interpret_filepath(address_path):
+    if type(address_path) is str:
         address_path = AddressPath(address_path)
     namespace = address_path.namespace
     domain = address_path.domain

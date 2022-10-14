@@ -1,5 +1,6 @@
 from configparser import ConfigParser
 from pathlib import Path
+
 from ..ns_util import ns, ns_path
 from .emitters import Emitter
 

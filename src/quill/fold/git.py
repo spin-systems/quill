@@ -1,13 +1,15 @@
-from . import cut
-from .ns_util import ns_path, ns, pre_existing_ns_p
-from ..manifest.man import ssm
-from sys import stderr
-from git import Repo
 from itertools import starmap
-from subprocess import run
-from shutil import rmtree
 from os import utime
 from pathlib import Path
+from shutil import rmtree
+from subprocess import run
+from sys import stderr
+
+from git import Repo
+
+from ..manifest.man import ssm
+from . import cut
+from .ns_util import ns, ns_path, pre_existing_ns_p
 
 __all__ = [
     "clone",

@@ -1,6 +1,6 @@
 from bs4 import Tag
 
-__all__ = ["node_html_tag", "HtmlBlock", "HtmlDoc"]
+__all__ = ["node_html_tag", "HtmlBlock"]
 
 
 def node_html_tag(node, line_no=None):

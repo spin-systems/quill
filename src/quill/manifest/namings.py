@@ -1,6 +1,7 @@
-from ..scan.io import mmd
-from ..fold import ns_path
 from pandas import concat
+
+from ..fold import ns_path
+from ..scan.io import mmd
 
 __all__ = ["m", "alias_df"]
 

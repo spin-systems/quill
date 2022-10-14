@@ -1,8 +1,9 @@
 from enum import Enum
-from parse import parse as fparse
-from pathlib import Path
-from yaml import dump
 from os import sep as os_sep
+from pathlib import Path
+
+from parse import parse as fparse
+from yaml import dump
 
 SubclassablePathType = type(Path())
 

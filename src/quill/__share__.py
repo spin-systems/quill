@@ -1,12 +1,15 @@
-from . import __path__ as _dir_nspath
-from pathlib import Path
 from enum import IntEnum
+from pathlib import Path
+
+from . import __path__ as _dir_nspath
 
 __all__ = ["ql_path"]
 ql_path = Path(list(_dir_nspath)[0])
 
-# used for prefix dicts
+
 class classproperty(property):
+    "used for prefix dicts"
+
     def __get__(self, cls, owner):
         return classmethod(self.fget).__get__(None, owner)()
 
