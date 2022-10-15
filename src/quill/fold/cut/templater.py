@@ -32,7 +32,7 @@ TEMPLATE_DIRNAME = "src"
 POST_DIRNAME = "posts"
 
 
-def standup(domains_list=None, verbose=True):
+def standup(domains_list=None, verbose=True, cyl=False):
     domains_list = domains_list or [*ns]
     for domain in domains_list:
         ns_p = ns_path / domain
