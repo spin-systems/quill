@@ -1,4 +1,4 @@
-image: "python:3.8"
+image: "python:3.10"
 
 before_script:
   - eval "$(ssh-agent -s)"
@@ -10,13 +10,13 @@ before_script:
   - cat gitlab-key-temp >> ~/.ssh/known_hosts && rm gitlab-key-temp
   - gitlab_ssh_key_decoded=$(echo "${SSH_priv_key_GitLab_ci2}" | base64 --decode | tr -d "\r")
   - echo "${SSH_priv_key_GitLab_ci2}" | base64 --decode | tr -d "\r" | wc -c # Should be 419
-  - python3.8 -c "s = \"\"\"${gitlab_ssh_key_decoded}\"\"\"; print('SSH newline check:', s.endswith('\n'))"
+  - python3.10 -c "s = \"\"\"${gitlab_ssh_key_decoded}\"\"\"; print('SSH newline check:', s.endswith('\n'))"
   - ssh-add <(echo "${gitlab_ssh_key_decoded}")
     #ssh-add <(echo "${SSH_priv_key_GitLab_ci2}" | base64 --decode | tr -d "\r")
   - ssh-add <(echo "${SSH_priv_key_GitHub}" | base64 --decode)
   - git config --global user.email "${git_email}"
   - git config --global user.name "${full_name}"
-  - python3.8 -m pip install -r requirements.txt
+  - python3.10 -m pip install -r requirements.txt
 
 stages:
   - QL
@@ -24,7 +24,7 @@ stages:
 quill:
   stage: QL
   script:
-  - python3.8 -m pip install "ql"
-  - python3.8 -c "import markdown as md; test_md1 = md.markdown('''\`\`\`sh\nls\n\`\`\`''', extensions=['fenced_code']); print(test_md1)"
-  - python3.8 -c "import markdown as md; test_md2 = md.markdown('''\`\`\`py\nprint(1)\n\`\`\`''', extensions='fenced_code codehilite sane_lists'.split()); print(test_md2)"
-  - python3.8 -c "import quill as ql; ql.source_manifest(); ql.fold.cut.standup(); ql.fold.wire.standup(); ql.stash_transfer_site_manifest();"
+  - python3.10 -m pip install "ql"
+  - python3.10 -c "import markdown as md; test_md1 = md.markdown('''\`\`\`sh\nls\n\`\`\`''', extensions=['fenced_code']); print(test_md1)"
+  - python3.10 -c "import markdown as md; test_md2 = md.markdown('''\`\`\`py\nprint(1)\n\`\`\`''', extensions='fenced_code codehilite sane_lists'.split()); print(test_md2)"
+  - python3.10 -c "import quill as ql; ql.source_manifest(); ql.fold.cut.standup(); ql.fold.wire.standup(); ql.stash_transfer_site_manifest();"

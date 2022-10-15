@@ -30,6 +30,8 @@ when for instance the templates for a site are changed).
 
 ## Helper CLI
 
+> Note: for reasons unknown, the `defopt` CLI only works on 3.10+
+
 Installation adds a `ql` command which has two subcommands, `standup` and `cyl`
 for repo-internal and -external output of generated sites respectively
 (currently only for the `fold.cut` module, not `fold.wire`,
