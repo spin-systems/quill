@@ -3,10 +3,10 @@ from pathlib import Path
 from sys import stderr
 
 from ..__share__ import ql_path
-from .distrib_setup import create_manifest, create_ns_aliases, create_routing_table
+from .distrib_setup import seed_manifest, seed_ns_aliases, seed_routing_table
 from .subdomain import parse_subdomain_url
 
-__all__ = ["ns", "ns_path"]
+__all__ = ["ns", "ns_path", "cyl_path"]
 
 
 def resolve_ns_path(qp=ql_path, ini_fn="spin.ini"):
@@ -15,24 +15,23 @@ def resolve_ns_path(qp=ql_path, ini_fn="spin.ini"):
         c.read_file(f, ini_fn)
     rel_level = c.get("PARENT", "relative")
     dir_name = c.get("PARENT", "dir_name")
+    # Refers to seeding artifacts (aliases, routing table, git manifest)
+    seed = bool(int(c.get("PARENT", "seed")))
     ### This part is all about standardising whether local or distributed
     home_spin = Path.home() / "spin"
-    home_is_setup = (qp / Path(*[".."] * 3)).resolve() == home_spin
-    if home_is_setup:
-        ns_p = (qp / rel_level / dir_name).resolve()
-        pre_existing_ns_p = True
-    else:
-        # this is not set up in the home directory, probably been distributed
-        # if you resolve the namespace path you'll only check if the library
-        # "ss" has been installed, which on PyPi is a subtitles library
-        # (Don't do this! Instead set up an installation in the home directory)
-        ns_p = home_spin / dir_name
-        pre_existing_ns_p = ns_p.exists()
-        if not pre_existing_ns_p:
-            ns_p.mkdir(parents=True)
-            create_ns_aliases(ns_p)
-            create_routing_table(ns_p)
-            create_manifest(ns_p)
+    is_home_setup = (qp / rel_level).resolve() == home_spin
+    ns_p = home_spin / dir_name
+    pre_existing_ns_p = ns_p.exists()
+    # if this is not set up in the home directory, probably been distributed
+    # if you resolve the namespace path you'll only check if the library
+    # "ss" has been installed, which on PyPi is a subtitles library
+    # (Don't do this! Instead set up an installation in the home directory)
+    if not pre_existing_ns_p:
+        ns_p.mkdir(parents=True)
+        if seed:
+            seed_ns_aliases(ns_p)
+            seed_routing_table(ns_p)
+            seed_manifest(ns_p)
     return ns_p, pre_existing_ns_p
 
 
@@ -56,3 +55,4 @@ class NameSpaceDict(dict):
 
 ns = NameSpaceDict()  # NameSpace()
 ns_path, pre_existing_ns_p = resolve_ns_path()
+cyl_path, pre_existing_cyl_p = resolve_ns_path(ini_fn="cyl.ini")

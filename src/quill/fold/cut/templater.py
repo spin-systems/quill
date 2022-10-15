@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 from datetime import datetime as dt
 from functools import partial
@@ -8,9 +10,9 @@ import frontmatter
 import markdown
 from staticjinja import Site
 
-from ..ns_util import ns, ns_path
+from ..ns_util import cyl_path, ns, ns_path
 
-__all__ = ["standup"]
+__all__ = ["cyl", "standup"]
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -32,15 +34,37 @@ TEMPLATE_DIRNAME = "src"
 POST_DIRNAME = "posts"
 
 
-def standup(domains_list=None, verbose=True, cyl=False):
+def cyl(
+    domains_list: list[str] | None = None,
+    *,
+    incremental: bool = False,
+    verbose: bool = True,
+):
+    standup(
+        domains_list=domains_list,
+        incremental=incremental,
+        internal=False,
+        verbose=verbose,
+    )
+
+
+def standup(
+    domains_list: list[str] | None = None,
+    *,
+    internal: bool = True,
+    incremental: bool = False,
+    verbose: bool = True,
+):
     domains_list = domains_list or [*ns]
     for domain in domains_list:
-        ns_p = ns_path / domain
-        if not ns_p.exists() and ns_p.is_dir():
-            raise ValueError(f"{ns_p} not found")
-        template_dir = ns_p / TEMPLATE_DIRNAME
+        ns_in_p = ns_path / domain
+        if not (ns_in_p.exists() and ns_in_p.is_dir()):
+            raise ValueError(f"{ns_in_p} not found")
+        # ns_in_p for input and ns_out_p for output (not necessarily same)
+        ns_out_p = (ns_path if internal else cyl_path) / domain
+        site_dir = ns_out_p / (OUT_DIRNAME if internal else ".")
+        template_dir = ns_in_p / TEMPLATE_DIRNAME
         if template_dir.exists():
-            site_dir = ns_p / OUT_DIRNAME
             post_dir = template_dir / POST_DIRNAME
             extra_ctxs = []
             if post_dir.exists():

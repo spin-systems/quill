@@ -28,6 +28,42 @@ when for instance the templates for a site are changed).
   - `fold`⠶`wire`: Emit HTML websites from `.mmd` files
   - `fold`⠶`cut`: Emit HTML websites from `.html` Jinja templates and `.md` files
 
+## Helper CLI
+
+Installation adds a `ql` command which has two subcommands, `standup` and `cyl`
+for repo-internal and -external output of generated sites respectively
+(currently only for the `fold.cut` module, not `fold.wire`,
+so not yet sufficient to replace in the CI pipeline).
+
+```sh
+ql cyl -h
+```
+⇣
+```
+usage: ql cyl [-h] [-d [DOMAINS_LIST ...]]
+              [-i | --incremental | --no-incremental]
+              [-v | --verbose | --no-verbose]
+
+options:
+  -h, --help            show this help message and exit
+  -d [DOMAINS_LIST ...], --domains-list [DOMAINS_LIST ...]
+                        (default: None)
+  -i, --incremental, --no-incremental
+                        (default: False)
+  -v, --verbose, --no-verbose
+                        (default: True)
+```
+
+So for example:
+
+```sh
+ql cyl -d pore
+```
+
+Populates `~/spin/cyl/pore` with the `cut` module's portion of _pore.spin.systems_
+
+- TODO: incremental builds
+
 ## Usage memo
 
 - Requires directory of static site repositories at

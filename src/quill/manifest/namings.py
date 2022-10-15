@@ -16,6 +16,6 @@ for k in alias_df:
     ns_long, ns_short = k
     alias_df.get(k).insert(0, "namespace", ns_short)
     alias_df.get(k).insert(0, "namespace_full", ns_long)
-alias_df = concat(alias_df.values()).reset_index().drop("index", 1)
+alias_df = concat(alias_df.values()).reset_index().drop(columns="index")
 alias_df.namespace = alias_df.namespace.astype("category")
 alias_df.namespace_full = alias_df.namespace_full.astype("category")

@@ -7,7 +7,11 @@ from .emitters import Emitter
 __all__ = ["standup"]
 
 
-def standup(domains_list=None, dry_config=False, verbose=True):
+def standup(
+    domains_list: list[str] | None = None,
+    dry_config: bool = False,
+    verbose: bool = False,
+):
     ini_fn = "emitters.ini"
     ini_dir = Path(__file__).parent
     c = ConfigParser()

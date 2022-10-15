@@ -36,6 +36,11 @@ setup(
         "local_scheme": local_scheme,
     },
     setup_requires=["setuptools_scm"],
+    entry_points={
+        "console_scripts": [
+            "ql = quill.fold.cli:fold_cli",
+        ],
+    },
     install_requires=reqs,
     python_requires=">=3",
 )
