@@ -105,14 +105,18 @@ def standup(
                         # ("index.html", partial(indexed_article_series, dir_path=post_dir)),
                     ]
                 )
-            cut_templates(
+            success = cut_templates(
                 template_dir=template_dir,
                 out_dir=site_dir,
                 contexts=extra_ctxs,
                 audit_builder=audit_builder,
             )
-            log(f"Built {template_dir}")
-            # breakpoint()
+            if success:
+                log(f"Built {template_dir}")
+                if audit_builder.active:
+                    audit_builder.auditer.write_delta()
+            else:
+                log(f"Failed to build {template_dir}")
 
 
 def fmt_mtime(path_to_file):
@@ -128,54 +132,107 @@ def update_ctx_count(name):
     return
 
 
+def multirow_corruption_error(indexed_file):
+    err_msg = f"Corrupt audit log: multiple rows for the same input file {indexed_file}"
+    raise ValueError(err_msg)
+
+
 def check_audit(
     template,
     template_dir: Path,
     auditer: Auditer,
-):
+    known_upstream: Path | None = None,
+) -> bool:
     """
-    We only want to render things that are either:
+    We only want to render (here we'll say "generate") things that are either:
     - not in the audit list (meaning they are newly created)
     - in the audit list with a different input hash (meaning they changed)
 
     We also want to remove anything from the audit list that isn't rendered i.e. when
     the input file is deleted, we want to remove its record too
 
-    Therefore we will make a new audit log, adding records for each rendered item,
-    skipping renders when the input hash on record matches, (with one exception: if the
-    file's template hash on record doesn't).
+    Therefore we will make a new audit log, adding records for each rendered item
+    (enabling us to check after finishing if any that were on record are no longer).
+
+    We will skip renders when the input hash on record matches, so long as the file's
+    template hash on record also matches (which we track as the 'upstream' file).
+
+    Where we can't specify the upstream dependency, for now we will assume that it has
+    complex dependency, and always prefer to regenerate it. For example: some
+    `index.html` files are generated based on the articles in a series and partial
+    templates of footer content. Since there is not a single path we can check, we
+    won't assume it's unchanged (always regenerate it), erring on the side of caution.
     """
     # TODO use dataclass rather than passing audit, reaudit, and location of layout
     # used as template (which is needed to do second order hash of 'upstream')
-    input_files = auditer.log.f_in.to_list()
-    upstream_files = auditer.log.f_up.unique().tolist()
+    # TODO: use the template changelog idea
     # To avoid repeatedly checking template files, we will keep a dict of
     # these, and look up the result in the dict rather than re-check them.
     template_changelog = {}
     log(f"Checking audit log for {template}")
     template_p = Path(template.filename)
     template_subp = template_p.relative_to(template_dir)
-    matched_audit = auditer.log[auditer.log.f_in == template_subp]
-    if matched_audit.empty:
+    f_in_log_match = auditer.log[auditer.log.f_in == str(template_subp)]
+    input_sum = auditer.checksum(template_p)
+    new_record = {
+        "f_in": str(template_subp),
+        "f_up": None,
+        "f_out": None,
+        "h_in": input_sum,
+        "h_out": None,
+    }
+    record_df = pd.DataFrame.from_records([new_record])
+    if f_in_log_match.empty:
         # There is no record of the file in the audit log
         log(f"No record: {template_subp}")
         # TODO: move this to somewhere that collects contexts, so we can distinguish
         # those with an upstream from those without (like `index.html` which doesn't
         # render from markdown but gets filled in as its own jinja template)
-        new_record = {
-            "f_in": str(template_subp),
-            "f_up": None,
-            "f_out": None,
-            "h_in": auditer.checksum(template_p),
-            "h_out": None,
-        }
-        record_df = pd.DataFrame.from_records([new_record])
-        auditer.new = pd.concat([auditer.new, record_df], ignore_index=True)
+        generate_output = True
     else:
         # The file is recorded in the audit log: check for change
         log(f"Found record: {template_subp}")
-        # breakpoint()
-    return
+        # Validate the match
+        if len(f_in_log_match) > 1:
+            log(f"Multi-row match for {template_subp}")
+            multirow_corruption_error(template_subp)
+        f_in_log_record = f_in_log_match.squeeze()
+        if input_sum == f_in_log_record.h_in:
+            # It's identical: the input file itself has not changed since last audited
+            f_up = f_in_log_record.f_up
+            if pd.isnull(f_up):
+                # don't assume absence of upstream dependency that may have changed
+                generate_output = True
+            else:
+                f_up_log_record = validate_audit_result(
+                    auditer=auditer, rel_fp=f_up, down_rel_fp=template_subp
+                )
+                breakpoint()
+                upstream_p = template_dir / f_up
+                # Regenerate if the upstream changed
+                generate_output = auditer.checksum(upstream_p) != f_up_log_record.h_in
+        else:
+            # It's changed
+            generate_output = True
+    auditer.new = pd.concat([auditer.new, record_df], ignore_index=True)
+    return generate_output
+
+
+# TODO: turn validate_audit_result into an Auditer method
+# (NB: multirow_corruption_error lives in this module, move it too)
+def validate_audit_result(
+    auditer: Auditer, rel_fp: Path, down_rel_fp: Path | None = None
+) -> pd.Series:
+    log_match = auditer.log[auditer.log.f_in == str(rel_fp)]
+    if len(log_match) > 1:
+        err_msg = f"Multi-row match for {rel_fp}"
+        if down_rel_fp is not None:
+            err_msg += f" (upstream of {down_rel_fp})"
+        log(err_msg)
+        # Raise an error, do not return the record Series
+        multirow_corruption_error(rel_fp)
+    log_record = log_match.squeeze()
+    return log_record
 
 
 def base(
@@ -186,11 +243,16 @@ def base(
     """A context providing the template date"""
     log(f"Rendering {template} (base)")
     if audit_builder.active:
-        check_audit(template, template_dir=template_dir, auditer=audit_builder.auditer)
+        generate_flag = check_audit(
+            template, template_dir=template_dir, auditer=audit_builder.auditer
+        )
+    else:
+        generate_flag = True
     update_ctx_count(name="base")
     template_path = Path(template.filename)
     return {
         "template_date": fmt_mtime(template_path),
+        "base_generate": generate_flag,
     }
 
 
@@ -339,7 +401,7 @@ def cut_templates(
     audit_builder: AuditBuilder,
     contexts: list[tuple[str, Callable]] | None = None,
     mergecontexts: bool = True,
-):
+) -> bool:
     base_loaded = partial(base, template_dir=template_dir, audit_builder=audit_builder)
     default_ctxs = [
         (r".*\.(html|md)$", base_loaded),
@@ -360,4 +422,9 @@ def cut_templates(
     except BaseException as exc:
         logging.info("Failed to render site", exc_info=True)
         log(f"\nFAIL: {exc}\n")
-    log(f"CTX COUNTS: {GLOBAL_CTX_COUNT}")
+        success = False
+    else:
+        success = True
+    finally:
+        log(f"CTX COUNTS: {GLOBAL_CTX_COUNT}")
+        return success
