@@ -80,11 +80,12 @@ def standup(
         if template_dir.exists():
             if incremental:
                 audit_p = ns_out_p.parent / f"{domain}.tsv"
-                audit = read_audit(audit_p) if audit_p.exists() else {}
-                audit_log = pd.DataFrame.from_records(audit)
-                reaudit = audit_log.drop(audit_log.index)
+                if not audit_p.exists():
+                    audit_p.touch()
+                audit = read_audit(audit_p)
+                reaudit = audit.drop(audit.index)
             else:
-                audit_log = reaudit = None
+                audit = reaudit = None
             post_dir = template_dir / POST_DIRNAME
             extra_ctxs = []
             if post_dir.exists():
@@ -109,7 +110,7 @@ def standup(
                 template_dir=template_dir,
                 out_dir=site_dir,
                 contexts=extra_ctxs,
-                audit_log=audit_log,
+                audit_log=audit,
                 reaudit=reaudit,
             )
             log(f"Built {template_dir}")
@@ -154,7 +155,6 @@ def check_audit(
     # these, and look up the result in the dict rather than re-check them.
     template_changelog = {}
     log(f"Checking audit log for {template}")
-    # Need to access
     template_p = Path(template.filename)
     template_subp = template_p.relative_to(template_dir)
     matched_audit = audit_log[audit_log.f_in == template_subp]
