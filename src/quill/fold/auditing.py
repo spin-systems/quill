@@ -19,6 +19,6 @@ def checksum(filename, hash_factory=hashlib.md5, chunk_num_blocks=128) -> str:
 
 def read_audit(tsv_path: Path) -> pd.DataFrame:
     assert tsv_path.exists(), f"No TSV file at {tsv_path}"
-    fields = "f_in f_temp f_out h_in h_out".split()
+    fields = "f_in f_up f_out h_in h_out".split()
     audit = pd.read_csv(tsv_path, delimiter="\t", header=None, names=fields)
     return audit
