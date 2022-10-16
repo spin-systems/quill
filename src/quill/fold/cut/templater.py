@@ -5,6 +5,7 @@ from datetime import datetime as dt
 from functools import partial
 from pathlib import Path
 from sys import stderr
+from typing import Callable
 
 import dateparser
 import frontmatter
@@ -12,7 +13,7 @@ import markdown
 import pandas as pd
 from staticjinja import Site
 
-from ..auditing import checksum, read_audit
+from ..auditing import AuditBuilder, Auditer
 from ..ns_util import cyl_path, ns, ns_path
 
 __all__ = ["cyl", "standup"]
@@ -82,10 +83,9 @@ def standup(
                 audit_p = ns_out_p.parent / f"{domain}.tsv"
                 if not audit_p.exists():
                     audit_p.touch()
-                audit = read_audit(audit_p)
-                reaudit = audit.drop(audit.index)
+                audit_builder = AuditBuilder.from_path(active=True, path=audit_p)
             else:
-                audit = reaudit = None
+                audit_builder = AuditBuilder(active=False, auditer=None)
             post_dir = template_dir / POST_DIRNAME
             extra_ctxs = []
             if post_dir.exists():
@@ -105,15 +105,14 @@ def standup(
                         # ("index.html", partial(indexed_article_series, dir_path=post_dir)),
                     ]
                 )
-            breakpoint()
             cut_templates(
                 template_dir=template_dir,
                 out_dir=site_dir,
                 contexts=extra_ctxs,
-                audit_log=audit,
-                reaudit=reaudit,
+                audit_builder=audit_builder,
             )
             log(f"Built {template_dir}")
+            # breakpoint()
 
 
 def fmt_mtime(path_to_file):
@@ -132,8 +131,7 @@ def update_ctx_count(name):
 def check_audit(
     template,
     template_dir: Path,
-    audit_log: pd.DataFrame | None,
-    reaudit: pd.DataFrame | None,
+    auditer: Auditer,
 ):
     """
     We only want to render things that are either:
@@ -147,21 +145,20 @@ def check_audit(
     skipping renders when the input hash on record matches, (with one exception: if the
     file's template hash on record doesn't).
     """
-    # TODO use dataclass rather than passing audit_log, reaudit, and location of layout
+    # TODO use dataclass rather than passing audit, reaudit, and location of layout
     # used as template (which is needed to do second order hash of 'upstream')
-    input_files = audit_log.f_in.to_list()
-    upstream_files = audit_log.f_up.unique().tolist()
+    input_files = auditer.log.f_in.to_list()
+    upstream_files = auditer.log.f_up.unique().tolist()
     # To avoid repeatedly checking template files, we will keep a dict of
     # these, and look up the result in the dict rather than re-check them.
     template_changelog = {}
     log(f"Checking audit log for {template}")
     template_p = Path(template.filename)
     template_subp = template_p.relative_to(template_dir)
-    matched_audit = audit_log[audit_log.f_in == template_subp]
+    matched_audit = auditer.log[auditer.log.f_in == template_subp]
     if matched_audit.empty:
         # There is no record of the file in the audit log
         log(f"No record: {template_subp}")
-        breakpoint()
         # TODO: move this to somewhere that collects contexts, so we can distinguish
         # those with an upstream from those without (like `index.html` which doesn't
         # render from markdown but gets filled in as its own jinja template)
@@ -169,30 +166,27 @@ def check_audit(
             "f_in": str(template_subp),
             "f_up": None,
             "f_out": None,
-            "h_in": checksum(template_p),
+            "h_in": auditer.checksum(template_p),
             "h_out": None,
         }
         record_df = pd.DataFrame.from_records([new_record])
-        reaudit = pd.concat([reaudit, record_df], ignore_index=True)
+        auditer.new = pd.concat([auditer.new, record_df], ignore_index=True)
     else:
         # The file is recorded in the audit log: check for change
         log(f"Found record: {template_subp}")
-        breakpoint()
+        # breakpoint()
     return
 
 
 def base(
     template,
     template_dir: Path,
-    audit_log: pd.DataFrame | None,
-    reaudit: pd.DataFrame | None,
+    audit_builder: AuditBuilder,
 ):
     """A context providing the template date"""
     log(f"Rendering {template} (base)")
-    if audit_log is not None:
-        check_audit(
-            template, template_dir=template_dir, audit_log=audit_log, reaudit=reaudit
-        )
+    if audit_builder.active:
+        check_audit(template, template_dir=template_dir, auditer=audit_builder.auditer)
     update_ctx_count(name="base")
     template_path = Path(template.filename)
     return {
@@ -333,22 +327,20 @@ def render_md(site, template, **kwargs):
     out_suffix = ".html" if (is_index and not is_multipart) else ""
     out = site.outpath / template_out_as.with_suffix(out_suffix)
     # Compile and stream the result
-    site.get_template("layouts/_post.html").stream(**kwargs).dump(
+    upstream_template = "layouts/_post.html"
+    site.get_template(upstream_template).stream(**kwargs).dump(
         str(out), encoding="utf-8"
     )
 
 
 def cut_templates(
-    template_dir,
-    out_dir,
-    contexts=None,
-    mergecontexts=True,
-    audit_log=None,
-    reaudit=None,
+    template_dir: Path,
+    out_dir: Path,
+    audit_builder: AuditBuilder,
+    contexts: list[tuple[str, Callable]] | None = None,
+    mergecontexts: bool = True,
 ):
-    base_loaded = partial(
-        base, template_dir=template_dir, audit_log=audit_log, reaudit=reaudit
-    )
+    base_loaded = partial(base, template_dir=template_dir, audit_builder=audit_builder)
     default_ctxs = [
         (r".*\.(html|md)$", base_loaded),
         ("index.html", index),
@@ -365,6 +357,7 @@ def cut_templates(
     )
     try:
         site.render()
-    except:
+    except BaseException as exc:
         logging.info("Failed to render site", exc_info=True)
+        log(f"\nFAIL: {exc}\n")
     log(f"CTX COUNTS: {GLOBAL_CTX_COUNT}")
