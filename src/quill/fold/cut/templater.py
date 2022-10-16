@@ -8,8 +8,10 @@ from pathlib import Path
 import dateparser
 import frontmatter
 import markdown
+import pandas as pd
 from staticjinja import Site
 
+from ..auditing import read_audit
 from ..ns_util import cyl_path, ns, ns_path
 
 __all__ = ["cyl", "standup"]
@@ -65,6 +67,24 @@ def standup(
         site_dir = ns_out_p / (OUT_DIRNAME if internal else ".")
         template_dir = ns_in_p / TEMPLATE_DIRNAME
         if template_dir.exists():
+            if incremental:
+                audit_p = ns_out_p.parent / f"{domain}.tsv"
+                audit = read_audit(audit_p) if audit_p.exists() else {}
+                audit_df = pd.DataFrame.from_records(audit)
+                # We only want to render things that are either:
+                # - not in the audit list (meaning they are newly created)
+                # - in the audit list with a different input hash (meaning they changed)
+                #
+                # We also want to remove anything from the audit list that isn't rendered
+                # i.e. when the input file is deleted, we want to remove its record too
+                #
+                # Therefore we will make a new audit log, adding records for each
+                # rendered item, skipping renders when the input hash on record matches,
+                # (with one exception: if the file's template hash on record doesn't).
+                new_audit = audit_df.drop(audit_df.index)
+                # To avoid repeatedly checking template files, we will keep a dict of
+                # these, and look up the result in the dict rather than re-check them.
+                template_changelog = {}
             post_dir = template_dir / POST_DIRNAME
             extra_ctxs = []
             if post_dir.exists():
