@@ -132,11 +132,6 @@ def update_ctx_count(name):
     return
 
 
-def multirow_corruption_error(indexed_file):
-    err_msg = f"Corrupt audit log: multiple rows for the same input file {indexed_file}"
-    raise ValueError(err_msg)
-
-
 def check_audit(
     template,
     template_dir: Path,
@@ -171,11 +166,11 @@ def check_audit(
     template_changelog = {}
     log(f"Checking audit log for {template}")
     template_p = Path(template.filename)
-    template_subp = template_p.relative_to(template_dir)
-    f_in_log_match = auditer.log[auditer.log.f_in == str(template_subp)]
+    template_subp = Path(template.name)
+    f_in_log_match = auditer.log[auditer.log.f_in == template.name]
     input_sum = auditer.checksum(template_p)
     new_record = {
-        "f_in": str(template_subp),
+        "f_in": template.name,
         "f_up": None,
         "f_out": None,
         "h_in": input_sum,
@@ -184,18 +179,18 @@ def check_audit(
     record_df = pd.DataFrame.from_records([new_record])
     if f_in_log_match.empty:
         # There is no record of the file in the audit log
-        log(f"No record: {template_subp}")
+        log(f"No record: {template.name}")
         # TODO: move this to somewhere that collects contexts, so we can distinguish
         # those with an upstream from those without (like `index.html` which doesn't
         # render from markdown but gets filled in as its own jinja template)
         generate_output = True
     else:
         # The file is recorded in the audit log: check for change
-        log(f"Found record: {template_subp}")
+        log(f"Found record: {template.name}")
         # Validate the match
         if len(f_in_log_match) > 1:
-            log(f"Multi-row match for {template_subp}")
-            multirow_corruption_error(template_subp)
+            log(f"Multi-row match for {template.name}")
+            auditer.multirow_corruption_error(template.name)
         f_in_log_record = f_in_log_match.squeeze()
         if input_sum == f_in_log_record.h_in:
             # It's identical: the input file itself has not changed since last audited
@@ -204,10 +199,10 @@ def check_audit(
                 # don't assume absence of upstream dependency that may have changed
                 generate_output = True
             else:
-                f_up_log_record = validate_audit_result(
-                    auditer=auditer, rel_fp=f_up, down_rel_fp=template_subp
+                f_up_log_record = auditer.validate_audit_result(
+                    name=f_up,
+                    downstream=template.name,
                 )
-                breakpoint()
                 upstream_p = template_dir / f_up
                 # Regenerate if the upstream changed
                 generate_output = auditer.checksum(upstream_p) != f_up_log_record.h_in
@@ -216,23 +211,6 @@ def check_audit(
             generate_output = True
     auditer.new = pd.concat([auditer.new, record_df], ignore_index=True)
     return generate_output
-
-
-# TODO: turn validate_audit_result into an Auditer method
-# (NB: multirow_corruption_error lives in this module, move it too)
-def validate_audit_result(
-    auditer: Auditer, rel_fp: Path, down_rel_fp: Path | None = None
-) -> pd.Series:
-    log_match = auditer.log[auditer.log.f_in == str(rel_fp)]
-    if len(log_match) > 1:
-        err_msg = f"Multi-row match for {rel_fp}"
-        if down_rel_fp is not None:
-            err_msg += f" (upstream of {down_rel_fp})"
-        log(err_msg)
-        # Raise an error, do not return the record Series
-        multirow_corruption_error(rel_fp)
-    log_record = log_match.squeeze()
-    return log_record
 
 
 def base(
@@ -246,6 +224,8 @@ def base(
         generate_flag = check_audit(
             template, template_dir=template_dir, auditer=audit_builder.auditer
         )
+        if not generate_flag:
+            log(f"  ! Identified no regeneration: {template}")
     else:
         generate_flag = True
     update_ctx_count(name="base")
@@ -253,6 +233,8 @@ def base(
     return {
         "template_date": fmt_mtime(template_path),
         "base_generate": generate_flag,
+        "audit_builder": audit_builder,
+        "template_dir": template_dir,
     }
 
 
@@ -371,9 +353,17 @@ def md_context(template):
 
 def render_md(site, template, **kwargs):
     """A rule that receives the union of context dicts as kwargs"""
+    upstream_template = "layouts/_post.html"
+    # TODO record f_in for the upstream, again no f_out
+    audit_builder = kwargs.pop("audit_builder")
+    template_dir = kwargs.pop("template_dir")
+    base_generate_flag = kwargs.pop("base_generate")
+    if audit_builder.active:
+        breakpoint()
     if "/drafts/" in template.name:
         return
     log(f"Rendering {template} (md)")
+    # breakpoint() # TODO continue 2nd stage of generate flag handling
     update_ctx_count(name="render_md")
     # i.e. posts/post1.md -> build/posts/post1.html
     template_out_as = Path(template.name).relative_to(Path(POST_DIRNAME))
@@ -389,10 +379,34 @@ def render_md(site, template, **kwargs):
     out_suffix = ".html" if (is_index and not is_multipart) else ""
     out = site.outpath / template_out_as.with_suffix(out_suffix)
     # Compile and stream the result
-    upstream_template = "layouts/_post.html"
-    site.get_template(upstream_template).stream(**kwargs).dump(
-        str(out), encoding="utf-8"
-    )
+    if audit_builder.active:
+        auditer = audit_builder.auditer
+        f_in_new_match = auditer.new[auditer.new.f_in == template.name]
+        assert len(f_in_new_match) == 1, f"Pre-written {template.name} record not found"
+        f_in_new_record = f_in_new_match.squeeze()
+        new_record = {
+            "f_in": template.name,
+            "f_up": upstream_template,
+            "f_out": str(out),
+            "h_in": f_in_new_record.h_in,
+            "h_out": None,
+        }
+        record_df = pd.DataFrame.from_records([new_record])
+        # TODO: write a pre-routine that does layout (problem is no context)
+        # could even keep these separate on the auditer, and after going through the
+        # documents, drop any that aren't used for files... (TBH, overicing it)
+        upstream_generate_flag = auditer.validate_audit_result(
+            name=upstream_template,
+            downstream=template.name,
+        )
+        base_generate_flag = base_generate_flag and upstream_generate_flag
+    if not audit_builder.active or not base_generate_flag:
+        site.get_template(upstream_template).stream(**kwargs).dump(
+            str(out), encoding="utf-8"
+        )
+    if audit_builder.active:
+        ...  # TODO edit new (don't concat) # TODO pick up here
+        # auditer.new = pd.concat([auditer.new, record_df], ignore_index=True)
 
 
 def cut_templates(

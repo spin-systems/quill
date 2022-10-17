@@ -107,3 +107,28 @@ class Auditer:
         else:
             row_match = f"same {len(self.new)} rows"
             log(f"No delta, not overwriting {self.path} ({row_match})")
+
+    def validate_audit_result(
+        self,
+        name: str,
+        downstream: str | None = None,
+        old_log: bool = True,
+    ) -> pd.Series:
+        df = self.log if old_log else self.new
+        df_match = df[df.f_in == name]
+        if len(df_match) > 1:
+            err_msg = f"Multi-row match for {name}"
+            if downstream is not None:
+                err_msg += f" (upstream of {downstream})"
+            log(err_msg)
+            # Raise an error, do not return the record Series
+            self.multirow_corruption_error(name)
+        record = df_match.squeeze()
+        return record
+
+    @staticmethod
+    def multirow_corruption_error(indexed_file):
+        err_msg = (
+            f"Corrupt audit log: multiple rows for the same input file {indexed_file}"
+        )
+        raise ValueError(err_msg)
