@@ -108,27 +108,23 @@ class Auditer:
             row_match = f"same {len(self.new)} rows"
             log(f"No delta, not overwriting {self.path} ({row_match})")
 
-    def validate_audit_result(
-        self,
-        name: str,
-        downstream: str | None = None,
-        old_log: bool = True,
-    ) -> pd.Series:
-        df = self.log if old_log else self.new
-        df_match = df[df.f_in == name]
-        if len(df_match) > 1:
-            err_msg = f"Multi-row match for {name}"
-            if downstream is not None:
-                err_msg += f" (upstream of {downstream})"
-            log(err_msg)
-            # Raise an error, do not return the record Series
-            self.multirow_corruption_error(name)
-        record = df_match.squeeze()
-        return record
+    def lookup(
+        self, value, field="f_in", old_log: bool = True, strict: bool = True
+    ) -> pd.Series | pd.DataFrame:
+        """
+        Match exactly one row of the DataFrame and return it as a Series, or
+        return an empty DataFrame with the same columns if no records match.
+        If `strict` is True, raise an error if multiple rows match on `f_in`.
+        """
+        assert field in self.fields, f"{field=} not in {self.fields=}"
+        log = auditer.log if old_log else auditer.new
+        log_record = log[log[field] == value].squeeze()
+        if field == "f_in" and strict:
+            if log_record.ndim > 1 and not log_record.empty:
+                self.multirow_corruption_error(value)
+        return log_record
 
     @staticmethod
     def multirow_corruption_error(indexed_file):
-        err_msg = (
-            f"Corrupt audit log: multiple rows for the same input file {indexed_file}"
-        )
-        raise ValueError(err_msg)
+        err_msg = f"multiple rows for the same input file {indexed_file}"
+        raise ValueError(f"Corrupt audit log: {err_msg}")

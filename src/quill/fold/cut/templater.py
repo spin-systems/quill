@@ -164,10 +164,10 @@ def check_audit(
     # To avoid repeatedly checking template files, we will keep a dict of
     # these, and look up the result in the dict rather than re-check them.
     template_changelog = {}
-    log(f"Checking audit log for {template}")
     template_p = Path(template.filename)
     template_subp = Path(template.name)
-    f_in_log_match = auditer.log[auditer.log.f_in == template.name]
+    log(f"Checking audit log for {template.name}")
+    f_in_log_record = auditer.lookup(value=template.name, field="f_in", old_log=True)
     input_sum = auditer.checksum(template_p)
     new_record = {
         "f_in": template.name,
@@ -177,21 +177,13 @@ def check_audit(
         "h_out": None,
     }
     record_df = pd.DataFrame.from_records([new_record])
-    if f_in_log_match.empty:
+    if f_in_log_record.empty:
         # There is no record of the file in the audit log
         log(f"No record: {template.name}")
-        # TODO: move this to somewhere that collects contexts, so we can distinguish
-        # those with an upstream from those without (like `index.html` which doesn't
-        # render from markdown but gets filled in as its own jinja template)
         generate_output = True
     else:
         # The file is recorded in the audit log: check for change
         log(f"Found record: {template.name}")
-        # Validate the match
-        if len(f_in_log_match) > 1:
-            log(f"Multi-row match for {template.name}")
-            auditer.multirow_corruption_error(template.name)
-        f_in_log_record = f_in_log_match.squeeze()
         if input_sum == f_in_log_record.h_in:
             # It's identical: the input file itself has not changed since last audited
             f_up = f_in_log_record.f_up
@@ -199,10 +191,8 @@ def check_audit(
                 # don't assume absence of upstream dependency that may have changed
                 generate_output = True
             else:
-                f_up_log_record = auditer.validate_audit_result(
-                    name=f_up,
-                    downstream=template.name,
-                )
+                log(f"Checking audit log for {f_up} (upstream of {template.name})")
+                f_up_log_record = auditer.lookup(value=f_up, field="f_in", old_log=True)
                 upstream_p = template_dir / f_up
                 # Regenerate if the upstream changed
                 generate_output = auditer.checksum(upstream_p) != f_up_log_record.h_in
@@ -382,7 +372,7 @@ def render_md(site, template, **kwargs):
     if audit_builder.active:
         auditer = audit_builder.auditer
         f_in_new_match = auditer.new[auditer.new.f_in == template.name]
-        assert len(f_in_new_match) == 1, f"Pre-written {template.name} record not found"
+        assert f_in_new_match.ndim == 1, f"Pre-written {template.name} record not found"
         f_in_new_record = f_in_new_match.squeeze()
         new_record = {
             "f_in": template.name,
@@ -395,9 +385,9 @@ def render_md(site, template, **kwargs):
         # TODO: write a pre-routine that does layout (problem is no context)
         # could even keep these separate on the auditer, and after going through the
         # documents, drop any that aren't used for files... (TBH, overicing it)
-        upstream_generate_flag = auditer.validate_audit_result(
-            name=upstream_template,
-            downstream=template.name,
+        log(f"Checking audit log for {upstream_template} (upstream of {template.name})")
+        upstream_generate_flag = auditer.lookup(
+            value=upstream_template, field="f_in", old_log=True
         )
         base_generate_flag = base_generate_flag and upstream_generate_flag
     if not audit_builder.active or not base_generate_flag:
@@ -405,7 +395,7 @@ def render_md(site, template, **kwargs):
             str(out), encoding="utf-8"
         )
     if audit_builder.active:
-        ...  # TODO edit new (don't concat) # TODO pick up here
+        ...  # TODO edit new (don't concat) # TODO pick up here (can now rely on Series)
         # auditer.new = pd.concat([auditer.new, record_df], ignore_index=True)
 
 
