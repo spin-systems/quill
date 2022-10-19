@@ -1,6 +1,6 @@
 # quill
 
-Quill is the "driver" for [spin.systems](https://spin.systems),
+quill is the "driver" for [spin.systems](https://spin.systems),
 and packaged on PyPi as [ql](https://pypi.org/project/ql/).
 
 A more detailed description of the package namespace can be found below,
@@ -64,7 +64,43 @@ ql cyl -d pore
 
 Populates `~/spin/cyl/pore` with the `cut` module's portion of _pore.spin.systems_
 
-- TODO: incremental builds
+### Incremental builds, rechecking, and watching
+
+Towards the goal of implementing an incremental build system on CI, quill has 2 extra modes:
+
+- an _incremental_ build mode: where in addition to building the entire site (or domain list),
+  MD5 checksums are computed for each of the generated files. In this mode, the _build auditer_ is activated,
+  and stores a log as it generates the templates. Use the `-i` flag when you want to recreate the
+  inventory of template MD5 hashes.
+
+To run a build for the same domain as above, in incremental mode, run:
+
+```sh
+ql cyl -d pore -i
+```
+
+- a _recheck_ build mode: a subset of incremental builds in which only files whose input checksum
+  has changed since the last incremental run are regenerated. This makes the build substantially faster
+  as there is a reduced scope of templates to transform. Use the `-r` flag (alongside `-i`) when you
+  want to double check only the files in the template hash inventory and only regenerate what differs on disk.
+
+To run a recheck afterwards, and only build any files that changed in between builds, run:
+
+```sh
+ql cyl -d pore -i -r
+```
+
+- a _watch_ build mode: incompatible with incremental/recheck, this is for continuously rebuilding
+  (incremental mode is designed for repeated use, like on an incremental build system). Use the `-w`
+  flag when you want to have the page rebuild automatically in the background.
+
+Watching is incompatible with incremental mode, but rebuilds following changes to a file.
+
+The corresponding command to the ones above would be:
+
+```sh
+ql cyl -d pore -w
+```
 
 ## Usage memo
 

@@ -7,7 +7,7 @@ changed first: in fact the pipelines could use the entrypoints rather than -c fl
 
 import defopt
 
-from .cut.templater import cyl, standup
+from .cut.cutters import cyl, standup
 
 __all__ = ["fold_cli"]
 

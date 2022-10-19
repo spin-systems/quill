@@ -1,434 +1,137 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime as dt
-from functools import partial
+from dataclasses import dataclass
 from pathlib import Path
-from sys import stderr
 from typing import Callable
 
-import dateparser
-import frontmatter
-import markdown
-import pandas as pd
-from staticjinja import Site
+from staticjinja import Reloader, Site
 
-from ..auditing import AuditBuilder, Auditer
-from ..ns_util import cyl_path, ns, ns_path
+from ...__share__ import Logger
+from ..auditing import AuditBuilder
+from .ctx import GLOBAL_CTX_COUNT
+from .ctx_building import get_default_ctxs, get_post_ctxs
+from .rules import no_render, render_md
 
-__all__ = ["cyl", "standup"]
+__all__ = ["cut_templates"]
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-
-pymd_extensions = (
-    "fenced_code codehilite sane_lists def_list admonition toc markdown_katex".split()
-)
-extension_configs = {
-    "markdown_katex": {"no_inline_svg": True, "insert_fonts_css": False},
-}
-markdowner = markdown.Markdown(
-    output_format="html5",
-    extensions=pymd_extensions,
-    extension_configs=extension_configs,
-)
-
-OUT_DIRNAME = "site"
-TEMPLATE_DIRNAME = "src"
-POST_DIRNAME = "posts"
-
-global GLOBAL_CTX_COUNT
-GLOBAL_CTX_COUNT = {}
+Log, Err = next((logger.Log, logger.Err) for logger in [Logger(__name__)])
 
 
-def log(msg, use_logger=False):
-    if use_logger:
-        logger.info(msg)
-    else:
-        print(msg, file=stderr)
+@dataclass
+class Cutter:
+    template_dir: Path
+    out_dir: Path
+    audit_builder: AuditBuilder
+    contexts: list[tuple[str, Callable]]
+    mergecontexts: bool
+    watch: bool
 
+    def make_site(self, rules: list[tuple[str, Callable]]) -> Site:
+        site = Site.make_site(
+            contexts=self.contexts,
+            mergecontexts=self.mergecontexts,
+            searchpath=self.template_dir,
+            outpath=self.out_dir,
+            rules=rules,
+        )
+        return site
 
-def cyl(
-    domains_list: list[str] | None = None,
-    *,
-    incremental: bool = False,
-    verbose: bool = True,
-):
-    standup(
-        domains_list=domains_list,
-        incremental=incremental,
-        internal=False,
-        verbose=verbose,
-    )
-
-
-def standup(
-    domains_list: list[str] | None = None,
-    *,
-    internal: bool = True,
-    incremental: bool = False,
-    verbose: bool = True,
-):
-    domains_list = domains_list or [*ns]
-    for domain in domains_list:
-        ns_in_p = ns_path / domain
-        if not (ns_in_p.exists() and ns_in_p.is_dir()):
-            raise ValueError(f"{ns_in_p} not found")
-        # ns_in_p for input and ns_out_p for output (not necessarily same)
-        ns_out_p = (ns_path if internal else cyl_path) / domain
-        site_dir = ns_out_p / (OUT_DIRNAME if internal else ".")
-        template_dir = ns_in_p / TEMPLATE_DIRNAME
-        if template_dir.exists():
-            if incremental:
-                audit_p = ns_out_p.parent / f"{domain}.tsv"
-                if not audit_p.exists():
-                    audit_p.touch()
-                audit_builder = AuditBuilder.from_path(active=True, path=audit_p)
+    def render(self, site: Site, restrict_templates: list[str]) -> bool:
+        try:
+            if restrict_templates:
+                temp_it = [t for t in site.templates if t.name in restrict_templates]
+                # Like using the wrapper `site.render` but replacing its templates iterator
+                site.render_templates(temp_it)
+                site.copy_static(site.static_names)
+                if self.watch:
+                    Reloader(site).watch()
             else:
-                audit_builder = AuditBuilder(active=False, auditer=None)
-            post_dir = template_dir / POST_DIRNAME
-            extra_ctxs = []
-            if post_dir.exists():
-                post_dir_sans_drafts = [
-                    a for a in post_dir.iterdir() if a.name != "drafts"
-                ]
-                for a in post_dir_sans_drafts:
-                    log(f"POST: {a}")
-                post_leaf_dir = Path(POST_DIRNAME)
-                post_ctxs = [
-                    (str(post_leaf_dir / a.name), article) for a in post_dir_sans_drafts
-                ]
-                extra_ctxs.extend(post_ctxs)
-                extra_ctxs.extend(
-                    [
-                        ("index.html", partial(indexed_articles, dir_path=post_dir)),
-                        # ("index.html", partial(indexed_article_series, dir_path=post_dir)),
-                    ]
-                )
-            success = cut_templates(
-                template_dir=template_dir,
-                out_dir=site_dir,
-                contexts=extra_ctxs,
-                audit_builder=audit_builder,
-            )
-            if success:
-                log(f"Built {template_dir}")
-                if audit_builder.active:
-                    audit_builder.auditer.write_delta()
-            else:
-                log(f"Failed to build {template_dir}")
-
-
-def fmt_mtime(path_to_file):
-    mtime = path_to_file.stat().st_mtime
-    date = dt.fromtimestamp(mtime)
-    return date.strftime("%Y-%m-%dT%H:%M:%SZ")
-
-
-def update_ctx_count(name):
-    global GLOBAL_CTX_COUNT
-    GLOBAL_CTX_COUNT.setdefault(name, 0)
-    GLOBAL_CTX_COUNT[name] += 1
-    return
-
-
-def check_audit(
-    template,
-    template_dir: Path,
-    auditer: Auditer,
-    known_upstream: Path | None = None,
-) -> bool:
-    """
-    We only want to render (here we'll say "generate") things that are either:
-    - not in the audit list (meaning they are newly created)
-    - in the audit list with a different input hash (meaning they changed)
-
-    We also want to remove anything from the audit list that isn't rendered i.e. when
-    the input file is deleted, we want to remove its record too
-
-    Therefore we will make a new audit log, adding records for each rendered item
-    (enabling us to check after finishing if any that were on record are no longer).
-
-    We will skip renders when the input hash on record matches, so long as the file's
-    template hash on record also matches (which we track as the 'upstream' file).
-
-    Where we can't specify the upstream dependency, for now we will assume that it has
-    complex dependency, and always prefer to regenerate it. For example: some
-    `index.html` files are generated based on the articles in a series and partial
-    templates of footer content. Since there is not a single path we can check, we
-    won't assume it's unchanged (always regenerate it), erring on the side of caution.
-    """
-    # TODO use dataclass rather than passing audit, reaudit, and location of layout
-    # used as template (which is needed to do second order hash of 'upstream')
-    # TODO: use the template changelog idea
-    # To avoid repeatedly checking template files, we will keep a dict of
-    # these, and look up the result in the dict rather than re-check them.
-    template_changelog = {}
-    template_p = Path(template.filename)
-    template_subp = Path(template.name)
-    log(f"Checking audit log for {template.name}")
-    f_in_log_record = auditer.lookup(value=template.name, field="f_in", old_log=True)
-    input_sum = auditer.checksum(template_p)
-    new_record = {
-        "f_in": template.name,
-        "f_up": None,
-        "f_out": None,
-        "h_in": input_sum,
-        "h_out": None,
-    }
-    record_df = pd.DataFrame.from_records([new_record])
-    if f_in_log_record.empty:
-        # There is no record of the file in the audit log
-        log(f"No record: {template.name}")
-        generate_output = True
-    else:
-        # The file is recorded in the audit log: check for change
-        log(f"Found record: {template.name}")
-        if input_sum == f_in_log_record.h_in:
-            # It's identical: the input file itself has not changed since last audited
-            f_up = f_in_log_record.f_up
-            if pd.isnull(f_up):
-                # don't assume absence of upstream dependency that may have changed
-                generate_output = True
-            else:
-                log(f"Checking audit log for {f_up} (upstream of {template.name})")
-                f_up_log_record = auditer.lookup(value=f_up, field="f_in", old_log=True)
-                upstream_p = template_dir / f_up
-                # Regenerate if the upstream changed
-                generate_output = auditer.checksum(upstream_p) != f_up_log_record.h_in
+                site.render(use_reloader=self.watch)
+                temp_it = site.templates
+        except BaseException as exc:
+            Err("Failed to render site", exc_info=True)
+            logging.error(exc, exc_info=True)
+            Log(f"\nFAIL: {exc}\n")
+            success = False
         else:
-            # It's changed
-            generate_output = True
-    auditer.new = pd.concat([auditer.new, record_df], ignore_index=True)
-    return generate_output
+            success = True
+        finally:
+            Log(f"CTX COUNTS: {GLOBAL_CTX_COUNT}")
+            return success
 
-
-def base(
-    template,
-    template_dir: Path,
-    audit_builder: AuditBuilder,
-):
-    """A context providing the template date"""
-    log(f"Rendering {template} (base)")
-    if audit_builder.active:
-        generate_flag = check_audit(
-            template, template_dir=template_dir, auditer=audit_builder.auditer
-        )
-        if not generate_flag:
-            log(f"  ! Identified no regeneration: {template}")
-    else:
-        generate_flag = True
-    update_ctx_count(name="base")
-    template_path = Path(template.filename)
-    return {
-        "template_date": fmt_mtime(template_path),
-        "base_generate": generate_flag,
-        "audit_builder": audit_builder,
-        "template_dir": template_dir,
-    }
-
-
-def index(template):
-    # Unclear if this is used...? Provides no context info
-    log(f"Rendering {template} (index)")
-    return {}
-
-
-def indexed_article_series(template, dir_path, drop_hidden=True):
-    "Sort article series by date"
-    series_dict = {
-        "series": sorted(
-            [
-                article_series(a, is_path=True)
-                for a in dir_path.iterdir()
-                if a.is_dir()  # sub-directory
-                if (a / "index.md").exists()
-                if not a.name.startswith("_")  # not partial template
-            ],
-            key=lambda d: dateparser.parse(d["date"]),
-            reverse=True,
-        )
-    }
-    if drop_hidden:
-        series_dict = {
-            "series": [
-                article_series
-                for article_series in series_dict["series"]
-                if (
-                    "hidden" not in article_series
-                    or article_series["hidden"] is not True
-                )
-            ]
-        }
-    return series_dict
-
-
-def indexed_articles(template, dir_path, with_series=True):
-    "Sort articles by date"
-    articles_dict = {
-        "articles": sorted(
-            [
-                article(a, is_path=True)
-                for a in dir_path.iterdir()
-                if not a.is_dir()  # not sub-directory
-                if not a.name.startswith("_")  # not partial template
-            ],
-            key=lambda d: dateparser.parse(d["date"]),
-            reverse=True,
-        )
-    }
-    if with_series:
-        series_dict = indexed_article_series(template, dir_path)
-        articles_dict = {
-            "articles": sorted(
-                [
-                    *articles_dict["articles"],
-                    *series_dict["series"],
-                ],
-                key=lambda d: dateparser.parse(d["date"]),
-                reverse=True,
-            )
-        }
-    return articles_dict
-
-
-def article_series(template, is_path=False):
-    """A context providing the URL, time last modified, and all frontmatter metadata"""
-    log(f"Rendering {template} (article series)")
-    update_ctx_count(name="article_series")
-    template_path = template if is_path else Path(template.filename)
-    template_index_path = template_path / "index.md"
-    if not template_index_path.exists():
-        raise ValueError(
-            "Metadata is not supported for non-markdown articles (index.md not found)"
-        )
-    md_content = frontmatter.load(template_index_path)
-    metadata = md_content.metadata
-    required_keys = {"title", "desc", "date"}
-    if not all(k in metadata for k in required_keys):
-        raise ValueError(
-            f"{template=} missing one or more of {required_keys=} in index.md"
-        )
-    return {"url": template_path.stem, "mtime": fmt_mtime(template_path), **metadata}
-
-
-def article(template, is_path=False):
-    """A context providing the URL, time last modified, and all frontmatter metadata"""
-    log(f"Rendering {template} (article)")
-    update_ctx_count(name="article")
-    template_path = template if is_path else Path(template.filename)
-    if template_path.suffix != ".md":
-        raise ValueError("Metadata is not supported for non-markdown articles")
-    md_content = frontmatter.load(template_path)
-    metadata = md_content.metadata
-    required_keys = {"title", "desc", "date"}
-    if not all(k in metadata for k in required_keys):
-        raise ValueError(f"{template=} missing one or more of {required_keys=}")
-    return {"url": template_path.stem, "mtime": fmt_mtime(template_path), **metadata}
-
-
-def convert_markdown(markdown: str):
-    return markdowner.convert(markdown)
-
-
-def md_context(template):
-    """A context providing the parsed HTML and scanning it for KaTeX"""
-    log(f"Rendering {template} (md context)")
-    update_ctx_count(name="md_context")
-    md_content = frontmatter.load(template.filename)
-    html_content = convert_markdown(md_content.content)
-    has_katex = """<span class="katex">""" in html_content
-    return {"post_content_html": html_content, "katex": has_katex}
-
-
-def render_md(site, template, **kwargs):
-    """A rule that receives the union of context dicts as kwargs"""
-    upstream_template = "layouts/_post.html"
-    # TODO record f_in for the upstream, again no f_out
-    audit_builder = kwargs.pop("audit_builder")
-    template_dir = kwargs.pop("template_dir")
-    base_generate_flag = kwargs.pop("base_generate")
-    if audit_builder.active:
-        breakpoint()
-    if "/drafts/" in template.name:
+    def calculate_recheck(self) -> None:
+        auditer = self.audit_builder.auditer
+        log_precis = auditer.naive_recheck(self.template_dir)
+        auditer.naive_recheck_diff(self.template_dir, log_precis=log_precis)
         return
-    log(f"Rendering {template} (md)")
-    # breakpoint() # TODO continue 2nd stage of generate flag handling
-    update_ctx_count(name="render_md")
-    # i.e. posts/post1.md -> build/posts/post1.html
-    template_out_as = Path(template.name).relative_to(Path(POST_DIRNAME))
-    out_parts = list(template_out_as.parts)
-    is_index = template_out_as.stem == "index"
-    is_multipart = len(out_parts) > 1
-    if is_multipart:
-        if is_index:
-            out_parts.pop()  # Remove the index, giving it the parent dir as its path
-        template_out_as = Path("-".join(out_parts))
-    # URLs do not have to end with .html so do not add suffix other than for index file
-    # Multipart indexes drop the index name but for suffix we still treat the same
-    out_suffix = ".html" if (is_index and not is_multipart) else ""
-    out = site.outpath / template_out_as.with_suffix(out_suffix)
-    # Compile and stream the result
-    if audit_builder.active:
-        auditer = audit_builder.auditer
-        f_in_new_match = auditer.new[auditer.new.f_in == template.name]
-        assert f_in_new_match.ndim == 1, f"Pre-written {template.name} record not found"
-        f_in_new_record = f_in_new_match.squeeze()
-        new_record = {
-            "f_in": template.name,
-            "f_up": upstream_template,
-            "f_out": str(out),
-            "h_in": f_in_new_record.h_in,
-            "h_out": None,
-        }
-        record_df = pd.DataFrame.from_records([new_record])
-        # TODO: write a pre-routine that does layout (problem is no context)
-        # could even keep these separate on the auditer, and after going through the
-        # documents, drop any that aren't used for files... (TBH, overicing it)
-        log(f"Checking audit log for {upstream_template} (upstream of {template.name})")
-        upstream_generate_flag = auditer.lookup(
-            value=upstream_template, field="f_in", old_log=True
-        )
-        base_generate_flag = base_generate_flag and upstream_generate_flag
-    if not audit_builder.active or not base_generate_flag:
-        site.get_template(upstream_template).stream(**kwargs).dump(
-            str(out), encoding="utf-8"
-        )
-    if audit_builder.active:
-        ...  # TODO edit new (don't concat) # TODO pick up here (can now rely on Series)
-        # auditer.new = pd.concat([auditer.new, record_df], ignore_index=True)
 
 
 def cut_templates(
     template_dir: Path,
     out_dir: Path,
     audit_builder: AuditBuilder,
-    contexts: list[tuple[str, Callable]] | None = None,
     mergecontexts: bool = True,
+    dry_run: bool = False,
+    recheck: bool = False,
+    watch: bool = False,
 ) -> bool:
-    base_loaded = partial(base, template_dir=template_dir, audit_builder=audit_builder)
-    default_ctxs = [
-        (r".*\.(html|md)$", base_loaded),
-        ("index.html", index),
-        (r".*\.md", md_context),
-    ]
-    custom_contexts = contexts or []
-    contexts = default_ctxs + custom_contexts
-    site = Site.make_site(
+    default_ctxs = get_default_ctxs(template_dir, audit_builder=audit_builder)
+    post_ctxs = get_post_ctxs(template_dir, audit_builder=audit_builder)
+    contexts = default_ctxs + post_ctxs
+    cutter = Cutter(
+        template_dir=template_dir,
+        out_dir=out_dir,
+        audit_builder=audit_builder,
         contexts=contexts,
         mergecontexts=mergecontexts,
-        searchpath=template_dir,
-        outpath=out_dir,
-        rules=[(r".*\.md", render_md)],
+        watch=watch,
     )
-    try:
-        site.render()
-    except BaseException as exc:
-        logging.info("Failed to render site", exc_info=True)
-        log(f"\nFAIL: {exc}\n")
-        success = False
-    else:
-        success = True
-    finally:
-        log(f"CTX COUNTS: {GLOBAL_CTX_COUNT}")
-        return success
+    auditer = cutter.audit_builder.auditer
+    render_rules = [(r".*", no_render)] if dry_run else [(r".*\.md", render_md)]
+    if recheck:
+        cutter.calculate_recheck()
+        f_diff = auditer.diff_store["f_diff"]
+        f_no_diff = auditer.diff_store["f_no_diff"]
+        if not f_diff:
+            # Simulate the no delta state that was found by naive recheck
+            auditer.new = auditer.log.copy()
+            success = True
+        else:
+            # TODO: handle one or more diff files. Copy log to new then fix by overwrite
+            # on_rules = [
+            #     (filename, render_md)
+            #     for filename in f_diff
+            #     if Path(filename).suffix == ".md"
+            #     # NB: HTML files not caught as they don't use custom rules (yet?)
+            #     # so simply not overruling them lets them be (re)generated
+            # ]
+            # off_rules = [(filename, no_render) for filename in f_no_diff]
+            # render_rules = on_rules + off_rules
+            pass
+    allow_site_render = not recheck or (recheck and any(f_diff))
+    if allow_site_render:
+        site = cutter.make_site(rules=render_rules)
+        success = cutter.render(site, restrict_templates=f_diff if recheck else [])
+    if recheck and f_diff:
+        # auditer.new = auditer.log + the new row overwriting...
+        additions = auditer.new.copy()
+        auditer.new = auditer.log.copy()
+        for diffed_f in additions.f_in:
+            added_record = additions[additions.f_in == diffed_f].squeeze()
+            auditer.new[auditer.new.f_in == diffed_f] = added_record
+    return success
+
+
+# TODO: run a 2nd pass? (Problem: md state is computed in rule not context, so can't
+# compare after a dry run, would need to refactor into the md context...)
+# if audit_builder.active and success:
+#     breakpoint()
+#     dep_set, arr_set, alt_list = audit_builder.auditer.delta_inputs
+#     # TODO: would want to delete the files that departed
+#     arrived_inputs = list(arr_set)
+#     blocked_inputs = ...  # All files with no delta
+#     blocked_rules = [(f"{blocked}", no_render) for blocked in blocked_inputs]
+#     selective_render_rules = [*blocked_rules, *render_rules]
+#     site = cutter.make_site(rules=selective_render_rules)
+#     success = cutter.render(site)

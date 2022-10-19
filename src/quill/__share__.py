@@ -1,5 +1,7 @@
+import logging
 from enum import IntEnum
 from pathlib import Path
+from sys import stderr
 
 from . import __path__ as _dir_nspath
 
@@ -33,3 +35,20 @@ num2month_dict = dict([(x, y.name) for x, y in MonthEnum._value2member_map_.item
 
 num2alphanum_monthdict = {k: f"{k:02}{v}" for k, v in num2month_dict.items()}
 alphanum2num_monthdict = {v: k for k, v in num2alphanum_monthdict.items()}
+
+
+class Logger:
+    def __init__(self, modname, use_logger=False):
+        self.use_logger = use_logger
+        self.logger = logging.getLogger(modname)
+        self.logger.setLevel(logging.INFO)
+
+    def Log(self, msg, info=True, **kwargs):
+        if self.use_logger:
+            level = logging.INFO if info else logging.ERROR
+            self.logger.log(level=level, msg=msg, **kwargs)
+        else:
+            print(msg, file=stderr)
+
+    def Err(self, msg, **kwargs):
+        self.Log(msg, info=False, **kwargs)
