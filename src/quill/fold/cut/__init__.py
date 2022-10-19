@@ -1,3 +1,3 @@
-from .templater import *
+from .cutters import *
 
-__all__ = ["templater"]
+__all__ = ["cutters"]
