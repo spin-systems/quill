@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -6,11 +6,14 @@ with open("README.md", "r") as fh:
 with open("requirements.txt", "r") as fh:
     reqs = fh.read().splitlines()
 
+
 def local_scheme(version):
     return ""
 
+
 def version_scheme(version):
     return version.tag.base_version
+
 
 setup(
     name="ql",
@@ -38,7 +41,8 @@ setup(
     setup_requires=["setuptools_scm"],
     entry_points={
         "console_scripts": [
-            "ql = quill.fold.cli:fold_cli",
+            "ql = quill.fold.cli:standup_cli",
+            "cyl = quill.fold.cli:cyl_cli",
         ],
     },
     install_requires=reqs,

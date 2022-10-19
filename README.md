@@ -32,25 +32,34 @@ when for instance the templates for a site are changed).
 
 > Note: for reasons unknown, the `defopt` CLI only works on 3.10+
 
-Installation adds a `ql` command which has two subcommands, `standup` and `cyl`
-for repo-internal and -external output of generated sites respectively
-(currently only for the `fold.cut` module, not `fold.wire`,
+Installation adds a `ql` command (for deployment) and `cyl` (for local preview).
+These two commands handle repo-internal and -external output of generated sites respectively
+(`cyl` currently only for the `fold.cut` module, not `fold.wire`,
 so not yet sufficient to replace in the CI pipeline).
 
 ```sh
-ql cyl -h
+ql -h
 ```
 ⇣
 ```
-usage: ql cyl [-h] [-d [DOMAINS_LIST ...]]
-              [-i | --incremental | --no-incremental]
-              [-v | --verbose | --no-verbose]
+usage: ql [-h] [-d [DOMAINS_LIST ...]] [--internal | --no-internal]
+          [--incremental | --no-incremental]
+          [-n | --no-render | --no-no-render] [-r | --recheck | --no-recheck]
+          [-w | --watch | --no-watch] [-v | --verbose | --no-verbose]
 
 options:
   -h, --help            show this help message and exit
   -d [DOMAINS_LIST ...], --domains-list [DOMAINS_LIST ...]
                         (default: None)
-  -i, --incremental, --no-incremental
+  --internal, --no-internal
+                        (default: True)
+  --incremental, --no-incremental
+                        (default: False)
+  -n, --no-render, --no-no-render
+                        (default: False)
+  -r, --recheck, --no-recheck
+                        (default: False)
+  -w, --watch, --no-watch
                         (default: False)
   -v, --verbose, --no-verbose
                         (default: True)
@@ -59,7 +68,7 @@ options:
 So for example:
 
 ```sh
-ql cyl -d pore
+cyl -d pore
 ```
 
 Populates `~/spin/cyl/pore` with the `cut` module's portion of _pore.spin.systems_
@@ -76,7 +85,7 @@ Towards the goal of implementing an incremental build system on CI, quill has 2 
 To run a build for the same domain as above, in incremental mode, run:
 
 ```sh
-ql cyl -d pore -i
+cyl -d pore -i
 ```
 
 - a _recheck_ build mode: a subset of incremental builds in which only files whose input checksum
@@ -87,7 +96,7 @@ ql cyl -d pore -i
 To run a recheck afterwards, and only build any files that changed in between builds, run:
 
 ```sh
-ql cyl -d pore -i -r
+cyl -d pore -i -r
 ```
 
 - a _watch_ build mode: incompatible with incremental/recheck, this is for continuously rebuilding
@@ -99,7 +108,7 @@ Watching is incompatible with incremental mode, but rebuilds following changes t
 The corresponding command to the ones above would be:
 
 ```sh
-ql cyl -d pore -w
+cyl -d pore -w
 ```
 
 ## Usage memo

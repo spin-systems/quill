@@ -9,8 +9,12 @@ import defopt
 
 from .cut.cutters import cyl, standup
 
-__all__ = ["fold_cli"]
+__all__ = ["standup_cli", "cyl_cli"]
 
 
-def fold_cli():
-    defopt.run([standup, cyl])
+def standup_cli():
+    defopt.run(standup)
+
+
+def cyl_cli():
+    defopt.run(cyl)
