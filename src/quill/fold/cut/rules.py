@@ -56,7 +56,7 @@ def render_md(site, template, **kwargs):
         ), f"Pre-written {template.name} record not found"
         Log(f"Checking audit log for {upstream} (upstream of {template.name})")
         upstream_generate_flag = auditer.xref_delta(upstream, field="f_in", on="h_in")
-        base_generate_flag = base_generate_flag and upstream_generate_flag
+        generate_flag = base_generate_flag and upstream_generate_flag
         # Continued as turns out the stream-dumped result is not written yet
         no_output_msg = f"Output {out_subp} (from {template.name}) does not exist"
         assert out.exists(), no_output_msg
@@ -77,7 +77,9 @@ def render_md(site, template, **kwargs):
         # appropriately indicates `generate_output` (in this case `base_generate_flag`)
         # and in this part overwrite it (alongside the entire row), giving a simple
         # readout of the decision made per file?
-    if not audit_builder.active or not base_generate_flag:
+    write_stream_out = not audit_builder.active or generate_flag
+    Log(f"   ~ {write_stream_out=}")
+    if write_stream_out:
         site.get_template(upstream).stream(**kwargs).dump(str(out), encoding="utf-8")
 
 
