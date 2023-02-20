@@ -103,7 +103,7 @@ def indexed_articles(template, dir_path, audit_builder: AuditBuilder, with_serie
     articles_dict = {
         "articles": sorted(
             [
-                article(a, is_path=True)
+                article(a, audit_builder=audit_builder, is_path=True)
                 for a in dir_path.iterdir()
                 if not a.is_dir()  # not sub-directory
                 if not a.name.startswith("_")  # not partial template
