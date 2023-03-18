@@ -15,8 +15,8 @@ from .pymd_engine import convert_markdown
 __all__ = [
     "base",
     "index",
-    "indexed_article_series",
-    "indexed_articles",
+    "date_indexed_article_series",
+    "date_indexed_articles",
     "article_series",
     "article",
     "md_context",
@@ -65,8 +65,9 @@ def index(template, audit_builder: AuditBuilder):
     return {}
 
 
-def indexed_article_series(template, dir_path, drop_hidden=True):
+def date_indexed_article_series(template, dir_path, drop_hidden=True):
     "Sort article series by date"
+    breakpoint()
     series_dict = {
         "series": sorted(
             [
@@ -94,7 +95,7 @@ def indexed_article_series(template, dir_path, drop_hidden=True):
     return series_dict
 
 
-def indexed_articles(template, dir_path, audit_builder: AuditBuilder, with_series=True):
+def date_indexed_articles(template, dir_path, audit_builder: AuditBuilder, with_series=True):
     "Sort articles by date"
     if audit_builder.active:
         if audit_builder.auditer.recheck and audit_builder.auditer.is_no_diff(template):
@@ -113,7 +114,7 @@ def indexed_articles(template, dir_path, audit_builder: AuditBuilder, with_serie
         )
     }
     if with_series:
-        series_dict = indexed_article_series(template, dir_path)
+        series_dict = date_indexed_article_series(template, dir_path)
         articles_dict = {
             "articles": sorted(
                 [
