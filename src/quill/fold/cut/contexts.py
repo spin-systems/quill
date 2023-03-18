@@ -65,16 +65,20 @@ def index(template, audit_builder: AuditBuilder):
     return {}
 
 
+def is_valid_series_directory(path: Path) -> bool:
+    return (
+        path.is_dir() and (path / "index.md").exists() and not path.name.startswith("_")
+    )
+
+
 def date_indexed_article_series(template, dir_path, drop_hidden=True):
     "Sort article series by date"
     series_dict = {
         "series": sorted(
             [
-                article_series(a, is_path=True)
-                for a in dir_path.iterdir()
-                if a.is_dir()  # sub-directory
-                if (a / "index.md").exists()
-                if not a.name.startswith("_")  # not partial template
+                article_series(series_path, is_path=True)
+                for series_path in dir_path.iterdir()
+                if is_valid_series_directory(path=series_path)
             ],
             key=lambda d: dateparser.parse(d["date"]),
             reverse=True,
@@ -129,6 +133,12 @@ def date_indexed_articles(
     return articles_dict
 
 
+def validate_metadata(metadata, template):
+    required_keys = {"title", "desc", "date"}
+    if not all(k in metadata for k in required_keys):
+        raise ValueError(f"{template=} missing one or more of {required_keys=}")
+
+
 def article_series(template, is_path=False):
     """A context providing the URL, time last modified, and all frontmatter metadata"""
     Log(f"- Prepping {template} (article series)")
@@ -141,11 +151,7 @@ def article_series(template, is_path=False):
         )
     md_content = frontmatter.load(template_index_path)
     metadata = md_content.metadata
-    required_keys = {"title", "desc", "date"}
-    if not all(k in metadata for k in required_keys):
-        raise ValueError(
-            f"{template=} missing one or more of {required_keys=} in index.md"
-        )
+    validate_metadata(metadata=metadata, template=template)
     return {"url": template_path.stem, "mtime": fmt_mtime(template_path), **metadata}
 
 
@@ -162,9 +168,7 @@ def article(template, audit_builder: AuditBuilder, is_path=False):
         raise ValueError("Metadata is not supported for non-markdown articles")
     md_content = frontmatter.load(template_path)
     metadata = md_content.metadata
-    required_keys = {"title", "desc", "date"}
-    if not all(k in metadata for k in required_keys):
-        raise ValueError(f"{template=} missing one or more of {required_keys=}")
+    validate_metadata(metadata=metadata, template=template)
     return {"url": template_path.stem, "mtime": fmt_mtime(template_path), **metadata}
 
 
