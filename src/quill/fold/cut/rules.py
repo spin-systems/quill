@@ -31,7 +31,6 @@ def render_md(site, template, **kwargs):
     if "/drafts/" in template.name:
         return
     Log(f"Rendering {template} (md)")
-    # breakpoint()
     update_ctx_count(name="RULE::render_md")
     # i.e. posts/post1.md -> build/posts/post1.html
     template_out_as = Path(template.name).relative_to(Path(POST_DIRNAME))

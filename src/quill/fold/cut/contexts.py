@@ -67,7 +67,6 @@ def index(template, audit_builder: AuditBuilder):
 
 def date_indexed_article_series(template, dir_path, drop_hidden=True):
     "Sort article series by date"
-    breakpoint()
     series_dict = {
         "series": sorted(
             [
@@ -95,7 +94,9 @@ def date_indexed_article_series(template, dir_path, drop_hidden=True):
     return series_dict
 
 
-def date_indexed_articles(template, dir_path, audit_builder: AuditBuilder, with_series=True):
+def date_indexed_articles(
+    template, dir_path, audit_builder: AuditBuilder, with_series=True
+):
     "Sort articles by date"
     if audit_builder.active:
         if audit_builder.auditer.recheck and audit_builder.auditer.is_no_diff(template):
@@ -167,6 +168,22 @@ def article(template, audit_builder: AuditBuilder, is_path=False):
     return {"url": template_path.stem, "mtime": fmt_mtime(template_path), **metadata}
 
 
+def make_toc(index_path: Path) -> list[tuple[str, str]]:
+    toc_list = [
+        (
+            matter.metadata.get("order", -1),
+            matter.metadata["title"],
+            f"{index_path.parent.stem}-{series_entry.stem}",
+        )
+        for series_entry in index_path.parent.iterdir()
+        if series_entry != index_path
+        if not series_entry.is_dir()
+        for matter in [frontmatter.load(series_entry)]
+    ]
+    toc_list.sort()
+    return toc_list
+
+
 def md_context(template, audit_builder: AuditBuilder):
     """A context providing the parsed HTML and scanning it for KaTeX"""
     if audit_builder.active:
@@ -178,4 +195,11 @@ def md_context(template, audit_builder: AuditBuilder):
     md_content = frontmatter.load(template.filename)
     html_content = convert_markdown(md_content.content)
     has_katex = """<span class="katex">""" in html_content
-    return {"post_content_html": html_content, "katex": has_katex}
+    series_toc_magic = "%series_toc%"
+    has_series_toc = series_toc_magic in html_content
+    extra_flags = {"katex": has_katex}
+    if has_series_toc:
+        html_content = html_content.replace(series_toc_magic, "")
+        series_toc_list = make_toc(index_path=Path(template.filename))
+        extra_flags["series_toc"] = series_toc_list
+    return {"post_content_html": html_content, **extra_flags}
