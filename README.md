@@ -43,8 +43,8 @@ These two commands handle repo-internal and -external output of generated sites 
 so not yet sufficient to replace in the CI pipeline).
 
 ```
-usage: ql [-h] [-d [DOMAINS_LIST ...]] [--incremental] [-n] [-r] [-w]
-          [--internal | --no-internal] [--version]
+usage: ql [-h] [-d [DOMAINS_LIST ...]] [--incremental] [-n] [-r] [-w] [-v]
+          [-g] [--internal | --no-internal] [--version]
 
 Configure input filtering and output display.
 
@@ -52,7 +52,7 @@ options:
   -h, --help            show this help message and exit
   -d [DOMAINS_LIST ...], --domains-list [DOMAINS_LIST ...]
                         Names of the subdomains to build.
-                        (default: ['labs', 'conf', 'opt', 'cal', 'erg', 'arb', 'reed', 'noto', 'poll', 'spin.systems', 'doc', 'log', 'plot', 'ocu', 'pore', 'arc', 'qrx'])
+                        (default: None)
   --incremental         compute MD5 checksums for each of the generated files.
                         (default: False)
   -n, --no-render       Dry run mode.
@@ -61,6 +61,12 @@ options:
                         incremental run.
                         (default: False)
   -w, --watch           Rebuild the domains continuously (incompatible with incremental/recheck).
+                        (default: False)
+  -v, --verbose         Whether to announce what tasks are being carried out.
+                        (default: False)
+  -g, --gitlab-ci       Source the manifest repos (i.e. git pull them) and then stash
+                        the changes after building, switch to the www branch, pop the
+                        stash and push the changes (i.e. publish the website content).
                         (default: False)
   --internal, --no-internal
                         Whether to build sites internal (ql) or external (cyl,

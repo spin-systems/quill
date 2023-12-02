@@ -15,6 +15,7 @@ class SiteConfig(BaseModel):
       :param recheck: Only regenerate files whose input checksum has changed since the last
                       incremental run.
       :param watch: Rebuild the domains continuously (incompatible with incremental/recheck).
+      :param verbose: Whether to announce what tasks are being carried out.
       :param gitlab_ci: Source the manifest repos (i.e. git pull them) and then stash
                         the changes after building, switch to the www branch, pop the
                         stash and push the changes (i.e. publish the website content).
@@ -25,6 +26,7 @@ class SiteConfig(BaseModel):
     no_render: bool = False
     recheck: bool = False
     watch: bool = False
+    verbose: bool = False
     gitlab_ci: bool = False
 
 
