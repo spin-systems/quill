@@ -17,12 +17,17 @@ __all__ = ["run_defopt", "standup_cli", "cyl_cli"]
 
 def run_defopt(config_cls: type[CylConfig] | type[StandupConfig]) -> None:
     config = defopt.run(config_cls, no_negated_flags=True)
+    print(f"Loaded CLI config: {config!r}")
     if config.gitlab_ci:
+        print("Sourcing repos from manifest")
         source_manifest()
+    print("Creating fold.cut artifacts")
     cut_standup(config)
     if config.internal:
+        print("Creating fold.wire artifacts")
         wire_standup(config)
     if config.gitlab_ci:
+        print("Stashing and transferring site branches from manifest")
         stash_transfer_site_manifest()
     return
 
