@@ -13,6 +13,9 @@ Log = Logger(__name__).Log
 
 
 def standup(config: CylConfig | StandupConfig):
+    if config.domains_list is None:
+        config.domains_list = [*ns]
+        print(f"Changed domains list to full list: {config.domains_list}")
     for domain in config.domains_list:
         ns_in_p = ns_path / domain
         if not (ns_in_p.exists() and ns_in_p.is_dir()):

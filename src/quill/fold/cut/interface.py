@@ -1,7 +1,5 @@
 from pydantic import BaseModel
 
-from ..ns_util import ns
-
 __all__ = ["StandupConfig"]
 
 
@@ -22,7 +20,7 @@ class SiteConfig(BaseModel):
                         stash and push the changes (i.e. publish the website content).
     """
 
-    domains_list: list[str] = [*ns]
+    domains_list: list[str] | None = None
     incremental: bool = False
     no_render: bool = False
     recheck: bool = False

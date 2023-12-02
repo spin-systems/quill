@@ -22,6 +22,7 @@ def standup(
     emitters = {}
     if domains_list is None:
         domains_list = [*ns]
+        print(f"Changed domains list to full list: {domains_list}")
     for domain in c.sections():
         if domain not in domains_list:
             continue  # skip 'DEFAULT' section
