@@ -7,15 +7,24 @@ changed first: in fact the pipelines could use the entrypoints rather than -c fl
 
 import defopt
 
-from .cut.cutters import standup
+from .cut.cutters import standup as cut_standup
 from .cut.interface import CylConfig, StandupConfig
+from .git import source_manifest, stash_transfer_site_manifest
+from .wire.wiring import standup as wire_standup
 
 __all__ = ["run_defopt", "standup_cli", "cyl_cli"]
 
 
-def run_defopt(config_cls: type[CylConfig] | type[StandupConfig]):
+def run_defopt(config_cls: type[CylConfig] | type[StandupConfig]) -> None:
     config = defopt.run(config_cls, no_negated_flags=True)
-    return standup(config)
+    if config.gitlab_ci:
+        source_manifest()
+    cut_standup(config)
+    if config.internal:
+        wire_standup(config)
+    if config.gitlab_ci:
+        stash_transfer_site_manifest()
+    return
 
 
 def standup_cli() -> None:
