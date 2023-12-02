@@ -7,14 +7,20 @@ changed first: in fact the pipelines could use the entrypoints rather than -c fl
 
 import defopt
 
-from .cut.cutters import cyl, standup
+from .cut.cutters import standup
+from .cut.interface import CylConfig, StandupConfig
 
-__all__ = ["standup_cli", "cyl_cli"]
-
-
-def standup_cli():
-    defopt.run(standup)
+__all__ = ["run_defopt", "standup_cli", "cyl_cli"]
 
 
-def cyl_cli():
-    defopt.run(cyl)
+def run_defopt(config_cls: type[CylConfig] | type[StandupConfig]):
+    config = defopt.run(config_cls, no_negated_flags=True)
+    return standup(config)
+
+
+def standup_cli() -> None:
+    run_defopt(StandupConfig)
+
+
+def cyl_cli() -> None:
+    run_defopt(CylConfig)

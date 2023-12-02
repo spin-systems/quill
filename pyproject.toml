@@ -37,6 +37,7 @@ dependencies = [
     "dateparser",
     "markdown-katex>=202112.1034",
     "pathlib2",
+    "pydantic>=2.5.2",
 ]
 requires-python = ">=3.10,<3.13"
 readme = "README.md"

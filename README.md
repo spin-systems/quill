@@ -42,32 +42,31 @@ These two commands handle repo-internal and -external output of generated sites 
 (`cyl` currently only for the `fold.cut` module, not `fold.wire`,
 so not yet sufficient to replace in the CI pipeline).
 
-```sh
-ql -h
 ```
-⇣
-```
-usage: ql [-h] [-d [DOMAINS_LIST ...]] [--internal | --no-internal]
-          [--incremental | --no-incremental]
-          [-n | --no-render | --no-no-render] [-r | --recheck | --no-recheck]
-          [-w | --watch | --no-watch] [-v | --verbose | --no-verbose]
+usage: ql [-h] [-d [DOMAINS_LIST ...]] [--incremental] [-n] [-r] [-w]
+          [--internal | --no-internal] [--version]
+
+Configure input filtering and output display.
 
 options:
   -h, --help            show this help message and exit
   -d [DOMAINS_LIST ...], --domains-list [DOMAINS_LIST ...]
-                        (default: None)
+                        Names of the subdomains to build.
+                        (default: ['labs', 'conf', 'opt', 'cal', 'erg', 'arb', 'reed', 'noto', 'poll', 'spin.systems', 'doc', 'log', 'plot', 'ocu', 'pore', 'arc', 'qrx'])
+  --incremental         compute MD5 checksums for each of the generated files.
+                        (default: False)
+  -n, --no-render       Dry run mode.
+                        (default: False)
+  -r, --recheck         Only regenerate files whose input checksum has changed since the last
+                        incremental run.
+                        (default: False)
+  -w, --watch           Rebuild the domains continuously (incompatible with incremental/recheck).
+                        (default: False)
   --internal, --no-internal
+                        Whether to build sites internal (ql) or external (cyl,
+                        not including 'fold.wire') to the repo.
                         (default: True)
-  --incremental, --no-incremental
-                        (default: False)
-  -n, --no-render, --no-no-render
-                        (default: False)
-  -r, --recheck, --no-recheck
-                        (default: False)
-  -w, --watch, --no-watch
-                        (default: False)
-  -v, --verbose, --no-verbose
-                        (default: True)
+  --version             show program's version number and exit
 ```
 
 So for example:
