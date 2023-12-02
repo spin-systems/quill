@@ -3,7 +3,7 @@
 [![PyPI](https://img.shields.io/pypi/v/ql?logo=python&logoColor=%23cccccc)](https://pypi.org/project/ql)
 [![pdm-managed](https://img.shields.io/badge/pdm-managed-blueviolet)](https://pdm.fming.dev)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/spin-systems/quill/master.svg)](https://results.pre-commit.ci/latest/github/spin-systems/quill/master)
-[![Supported Python versions](https://img.shields.io/pypi/pyversions/classipypi.svg)](https://pypi.org/project/classipypi)
+[![Supported Python versions](https://img.shields.io/pypi/pyversions/ql.svg)](https://pypi.org/project/ql)
 
 quill is the "driver" for [spin.systems](https://spin.systems),
 and packaged on PyPi as [ql](https://pypi.org/project/ql/).
