@@ -2,9 +2,11 @@ from __future__ import annotations
 
 from functools import wraps
 from pathlib import Path
+from typing import Callable
 
 import dateparser
 import frontmatter
+from jinja2 import Template
 from pydantic import BaseModel, TypeAdapter
 from pydantic.types import FilePath
 
@@ -28,12 +30,33 @@ __all__ = [
 Log = Logger(__name__).Log
 
 
-def log_template(func):
+def log_template(func: Callable):
     @wraps(func)
-    def wrapper(template, *args, **kwargs):
+    def wrapper(template: Template, *args, **kwargs):
         Log(f"- Prepping {template} ({func.__name__})")
         update_ctx_count(name=func.__name__)
         return func(template, *args, **kwargs)
+
+    return wrapper
+
+
+def skip_auditer(
+    audit_builder: AuditBuilder, template: Template, func_name: str
+) -> bool:
+    if audit_builder.active:
+        auditer = audit_builder.auditer
+        if auditer.recheck and auditer.is_no_diff(template):
+            Log(f"  x Skipping ctx (known no diff): {template} ({func_name})")
+            return True
+    return False
+
+
+def audit_template(func):
+    @wraps(func)
+    def wrapper(template, audit_builder, *args, **kwargs):
+        if skip_auditer(audit_builder, template, func.__name__):
+            return {}
+        return func(template, audit_builder, *args, **kwargs)
 
     return wrapper
 
@@ -45,10 +68,8 @@ def base(
     audit_builder: AuditBuilder,
 ):
     """A context providing the template date"""
-    if audit_builder.active:
-        if audit_builder.auditer.recheck and audit_builder.auditer.is_no_diff(template):
-            Log(f"  x Skipping ctx (known no diff): {template} (base)")
-            return {}
+    if skip_auditer(audit_builder, template, "base"):
+        return {}
     if audit_builder.active:
         generate_flag = check_audit(
             template, template_dir=template_dir, auditer=audit_builder.auditer
@@ -66,14 +87,10 @@ def base(
     }
 
 
+@log_template
+@audit_template
 def index(template, audit_builder: AuditBuilder):
-    """Strongly suspect this doesn't actually do anything..."""
-    # TODO: check effect of removal
-    if audit_builder.active:
-        if audit_builder.auditer.recheck and audit_builder.auditer.is_no_diff(template):
-            Log(f"  x Skipping ctx (known no diff): {template} (index)")
-            return {}
-    Log(f"- Prepping {template} (index)")
+    """The home/front page (main subdomain index page)."""
     return {}
 
 
@@ -114,10 +131,8 @@ def date_indexed_articles(
     template, dir_path, audit_builder: AuditBuilder, with_series=True
 ):
     "Sort articles by date"
-    if audit_builder.active:
-        if audit_builder.auditer.recheck and audit_builder.auditer.is_no_diff(template):
-            Log(f"  x Skipping ctx (known no diff): {template} (article)")
-            return {}
+    if skip_auditer(audit_builder, template, "article"):
+        return {}
     articles_dict = {
         "articles": sorted(
             [
@@ -166,12 +181,9 @@ def article_series(template, is_path=False):
     return {"url": template_path.stem, "mtime": fmt_mtime(template_path), **metadata}
 
 
+@audit_template
 def article(template, audit_builder: AuditBuilder, is_path=False):
     """A context providing the URL, time last modified, and all frontmatter metadata"""
-    if audit_builder.active:
-        if audit_builder.auditer.recheck and audit_builder.auditer.is_no_diff(template):
-            Log(f"  x Skipping ctx (known no diff): {template} (article)")
-            return {}
     template_path = template if is_path else Path(template.filename)
     if template_path.suffix != ".md":
         raise ValueError("Metadata is not supported for non-markdown articles")
@@ -198,12 +210,9 @@ def make_toc(index_path: Path) -> list[tuple[str, str]]:
 
 
 @log_template
+@audit_template
 def md_context(template, audit_builder: AuditBuilder):
     """A context providing the parsed HTML and scanning it for KaTeX"""
-    if audit_builder.active:
-        if audit_builder.auditer.recheck and audit_builder.auditer.is_no_diff(template):
-            Log(f"  x Skipping ctx (known no diff): {template} (md context)")
-            return {}  # Avoid reading markdown files if not going to render them!
     md_content = frontmatter.load(template.filename)
     html_content = convert_markdown(md_content.content)
     has_katex = """<span class="katex">""" in html_content
