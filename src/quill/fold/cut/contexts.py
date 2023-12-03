@@ -100,31 +100,26 @@ def is_valid_series_directory(path: Path) -> bool:
     )
 
 
+def sort_by_date(records: list[dict]) -> list[dict]:
+    return sorted(records, key=lambda d: dateparser.parse(d["date"]), reverse=True)
+
+
 def date_indexed_article_series(template, dir_path, drop_hidden=True):
     "Sort article series by date"
-    series_dict = {
-        "series": sorted(
-            [
-                article_series(series_path, is_path=True)
-                for series_path in dir_path.iterdir()
-                if is_valid_series_directory(path=series_path)
-            ],
-            key=lambda d: dateparser.parse(d["date"]),
-            reverse=True,
-        )
-    }
+    unsorted_series_list = [
+        article_series(series_path, is_path=True)
+        for series_path in dir_path.iterdir()
+        if is_valid_series_directory(path=series_path)
+    ]
+    results = sort_by_date(unsorted_series_list)
     if drop_hidden:
-        series_dict = {
-            "series": [
-                article_series
-                for article_series in series_dict["series"]
-                if (
-                    "hidden" not in article_series
-                    or article_series["hidden"] is not True
-                )
-            ]
-        }
-    return series_dict
+        pruned_series_list = [
+            article_series
+            for article_series in results
+            if ("hidden" not in article_series or article_series["hidden"] is not True)
+        ]
+        results = pruned_series_list
+    return results
 
 
 def date_indexed_articles(
@@ -133,31 +128,17 @@ def date_indexed_articles(
     "Sort articles by date"
     if skip_auditer(audit_builder, template, "article"):
         return {}
-    articles_dict = {
-        "articles": sorted(
-            [
-                article(a, audit_builder=audit_builder, is_path=True)
-                for a in dir_path.iterdir()
-                if not a.is_dir()  # not sub-directory
-                if not a.name.startswith("_")  # not partial template
-            ],
-            key=lambda d: dateparser.parse(d["date"]),
-            reverse=True,
-        )
-    }
+    unsorted_articles = [
+        article(a, audit_builder=audit_builder, is_path=True)
+        for a in dir_path.iterdir()
+        if not a.is_dir()  # not sub-directory
+        if not a.name.startswith("_")  # not partial template
+    ]
+    sorted_articles = sort_by_date(unsorted_articles)
     if with_series:
-        series_dict = date_indexed_article_series(template, dir_path)
-        articles_dict = {
-            "articles": sorted(
-                [
-                    *articles_dict["articles"],
-                    *series_dict["series"],
-                ],
-                key=lambda d: dateparser.parse(d["date"]),
-                reverse=True,
-            )
-        }
-    return articles_dict
+        series_articles = date_indexed_article_series(template, dir_path)
+        sorted_articles = sort_by_date([*sorted_articles, *series_articles])
+    return {"articles": sorted_articles}
 
 
 class MDMetadata(BaseModel):
