@@ -73,4 +73,6 @@ def check_audit(
             # It's changed
             generate_output = True
     auditer.enter(f_in=template.name, h_in=input_sum)
+    if not generate_output:
+        Log(f"  ! Identified no regeneration: {template}")
     return generate_output

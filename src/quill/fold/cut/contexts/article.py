@@ -4,66 +4,23 @@ from pathlib import Path
 
 import dateparser
 import frontmatter
-from pydantic import BaseModel, TypeAdapter
+from pydantic import TypeAdapter
 from pydantic.types import FilePath
 
 from ....__share__ import Logger
 from ...auditing import AuditBuilder
-from ..audit_checking import check_audit
 from ..datetime_util import fmt_mtime
-from ..pymd_engine import convert_markdown
 from .helpers import audit_template, log_template, skip_auditer
+from .models import MDMetadata
 
 __all__ = [
-    "base",
-    "index",
     "date_indexed_article_series",
     "date_indexed_articles",
     "article_series",
     "article",
-    "md_context",
 ]
 
 Log = Logger(__name__).Log
-
-
-@log_template
-def base(
-    template,
-    template_dir: Path,
-    audit_builder: AuditBuilder,
-):
-    """A context providing the template date"""
-    if skip_auditer(audit_builder, template, "base"):
-        return {}
-    if audit_builder.active:
-        auditer = audit_builder.auditer
-        generate = check_audit(template, template_dir=template_dir, auditer=auditer)
-        if not generate:
-            Log(f"  ! Identified no regeneration: {template}")
-    else:
-        generate = True
-    template_path = Path(template.filename)
-    return {
-        "template_date": fmt_mtime(template_path),
-        "base_generate": generate,
-        "audit_builder": audit_builder,
-        "template_dir": template_dir,
-    }
-
-
-@log_template
-@audit_template
-def index(template, audit_builder: AuditBuilder):
-    """The home/front page (main subdomain index page)."""
-    return {}
-
-
-class ArticleSeries(BaseModel):
-    title: str
-    desc: str
-    date: str
-    hidden: bool = False
 
 
 def is_valid_series_directory(path: Path) -> bool:
@@ -113,16 +70,6 @@ def date_indexed_articles(
     return {"articles": sorted_articles}
 
 
-class MDMetadata(BaseModel):
-    title: str
-    desc: str
-    date: str
-
-
-class TemplateInfo(BaseModel):
-    index_path: FilePath
-
-
 @log_template
 def article_series(template, is_path=False):
     """A context providing the URL, time last modified, and all frontmatter metadata"""
@@ -144,36 +91,3 @@ def article(template, audit_builder: AuditBuilder, is_path=False):
     metadata = md_content.metadata
     validated = MDMetadata.model_validate(md_content.metadata)
     return {"url": template_path.stem, "mtime": fmt_mtime(template_path), **metadata}
-
-
-def make_toc(index_path: Path) -> list[tuple[str, str]]:
-    toc_list = [
-        (
-            matter.metadata.get("order", -1),
-            matter.metadata["title"],
-            f"{index_path.parent.stem}-{series_entry.stem}",
-        )
-        for series_entry in index_path.parent.iterdir()
-        if series_entry != index_path
-        if not series_entry.is_dir()
-        for matter in [frontmatter.load(series_entry)]
-    ]
-    toc_list.sort()
-    return toc_list
-
-
-@log_template
-@audit_template
-def md_context(template, audit_builder: AuditBuilder):
-    """A context providing the parsed HTML and scanning it for KaTeX"""
-    md_content = frontmatter.load(template.filename)
-    html_content = convert_markdown(md_content.content)
-    has_katex = """<span class="katex">""" in html_content
-    series_toc_magic = "%series_toc%"
-    has_series_toc = series_toc_magic in html_content
-    extra_flags = {"katex": has_katex}
-    if has_series_toc:
-        html_content = html_content.replace(series_toc_magic, "")
-        series_toc_list = make_toc(index_path=Path(template.filename))
-        extra_flags["series_toc"] = series_toc_list
-    return {"post_content_html": html_content, **extra_flags}
