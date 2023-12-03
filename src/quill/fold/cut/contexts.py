@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+from functools import wraps
 from pathlib import Path
 
 import dateparser
 import frontmatter
+from pydantic import BaseModel, TypeAdapter
+from pydantic.types import FilePath
 
 from ...__share__ import Logger
 from ..auditing import AuditBuilder
@@ -25,6 +28,17 @@ __all__ = [
 Log = Logger(__name__).Log
 
 
+def log_template(func):
+    @wraps(func)
+    def wrapper(template, *args, **kwargs):
+        Log(f"- Prepping {template} ({func.__name__})")
+        update_ctx_count(name=func.__name__)
+        return func(template, *args, **kwargs)
+
+    return wrapper
+
+
+@log_template
 def base(
     template,
     template_dir: Path,
@@ -35,7 +49,6 @@ def base(
         if audit_builder.auditer.recheck and audit_builder.auditer.is_no_diff(template):
             Log(f"  x Skipping ctx (known no diff): {template} (base)")
             return {}
-    Log(f"- Prepping {template} (base)")
     if audit_builder.active:
         generate_flag = check_audit(
             template, template_dir=template_dir, auditer=audit_builder.auditer
@@ -44,7 +57,6 @@ def base(
             Log(f"  ! Identified no regeneration: {template}")
     else:
         generate_flag = True
-    update_ctx_count(name="base")
     template_path = Path(template.filename)
     return {
         "template_date": fmt_mtime(template_path),
@@ -133,25 +145,24 @@ def date_indexed_articles(
     return articles_dict
 
 
-def validate_metadata(metadata, template):
-    required_keys = {"title", "desc", "date"}
-    if not all(k in metadata for k in required_keys):
-        raise ValueError(f"{template=} missing one or more of {required_keys=}")
+class MDMetadata(BaseModel):
+    title: str
+    desc: str
+    date: str
 
 
+class TemplateInfo(BaseModel):
+    index_path: FilePath
+
+
+@log_template
 def article_series(template, is_path=False):
     """A context providing the URL, time last modified, and all frontmatter metadata"""
-    Log(f"- Prepping {template} (article series)")
-    update_ctx_count(name="article_series")
     template_path = template if is_path else Path(template.filename)
-    template_index_path = template_path / "index.md"
-    if not template_index_path.exists():
-        raise ValueError(
-            "Metadata is not supported for non-markdown articles (index.md not found)"
-        )
-    md_content = frontmatter.load(template_index_path)
+    index_path = TypeAdapter(FilePath).validate_python(template_path / "index.md")
+    md_content = frontmatter.load(index_path)
     metadata = md_content.metadata
-    validate_metadata(metadata=metadata, template=template)
+    validated = MDMetadata.model_validate(md_content.metadata)
     return {"url": template_path.stem, "mtime": fmt_mtime(template_path), **metadata}
 
 
@@ -161,14 +172,12 @@ def article(template, audit_builder: AuditBuilder, is_path=False):
         if audit_builder.auditer.recheck and audit_builder.auditer.is_no_diff(template):
             Log(f"  x Skipping ctx (known no diff): {template} (article)")
             return {}
-    Log(f"- Prepping {template} (article)")
-    update_ctx_count(name="article")
     template_path = template if is_path else Path(template.filename)
     if template_path.suffix != ".md":
         raise ValueError("Metadata is not supported for non-markdown articles")
     md_content = frontmatter.load(template_path)
     metadata = md_content.metadata
-    validate_metadata(metadata=metadata, template=template)
+    validated = MDMetadata.model_validate(md_content.metadata)
     return {"url": template_path.stem, "mtime": fmt_mtime(template_path), **metadata}
 
 
@@ -188,14 +197,13 @@ def make_toc(index_path: Path) -> list[tuple[str, str]]:
     return toc_list
 
 
+@log_template
 def md_context(template, audit_builder: AuditBuilder):
     """A context providing the parsed HTML and scanning it for KaTeX"""
     if audit_builder.active:
         if audit_builder.auditer.recheck and audit_builder.auditer.is_no_diff(template):
             Log(f"  x Skipping ctx (known no diff): {template} (md context)")
             return {}  # Avoid reading markdown files if not going to render them!
-    Log(f"- Prepping {template} (md context)")
-    update_ctx_count(name="md_context")
     md_content = frontmatter.load(template.filename)
     html_content = convert_markdown(md_content.content)
     has_katex = """<span class="katex">""" in html_content
