@@ -1,3 +1,3 @@
-from .wiring import *
+from .main import standup
 
-__all__ = ["wiring"]
+__all__ = []

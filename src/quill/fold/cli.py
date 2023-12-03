@@ -7,11 +7,10 @@ changed first: in fact the pipelines could use the entrypoints rather than -c fl
 
 import defopt
 
-from .cut.cutters import standup as cut_standup
+from . import cut, wire
 from .cut.interface import CylConfig, StandupConfig
 from .git import source_manifest, stash_transfer_site_manifest
 from .ns_util import ns
-from .wire.wiring import standup as wire_standup
 
 __all__ = ["standup_cli", "cyl_cli"]
 
@@ -28,10 +27,10 @@ def run_defopt(config_cls: type[CylConfig] | type[StandupConfig]) -> None:
         log("Sourcing git repos from manifest")
         source_manifest()
     log("Creating fold.cut artifacts")
-    cut_standup(config)
+    cut.standup(config)
     if config.internal:
         log("Creating fold.wire artifacts")
-        wire_standup(config)
+        wire.standup(config)
     if config.gitlab_ci:
         log("Transferring artifacts via git stash to deployment branches")
         stash_transfer_site_manifest()

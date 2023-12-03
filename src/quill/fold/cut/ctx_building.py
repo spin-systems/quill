@@ -39,8 +39,6 @@ def get_post_ctxs(
     )
     if post_dir.exists():
         post_dir_sans_drafts = [a for a in post_dir.iterdir() if a.name != "drafts"]
-        # for a in post_dir_sans_drafts:
-        #     Log(f"POST: {a}")
         post_leaf_dir = Path(POST_DIRNAME)
         post_ctxs = [
             (str(post_leaf_dir / a.name), article_loaded) for a in post_dir_sans_drafts

@@ -1,3 +1,3 @@
-from .cutters import *
+from .main import standup
 
-__all__ = ["cutters"]
+__all__ = []
