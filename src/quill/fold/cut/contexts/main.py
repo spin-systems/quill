@@ -1,21 +1,18 @@
 from __future__ import annotations
 
-from functools import wraps
 from pathlib import Path
-from typing import Callable
 
 import dateparser
 import frontmatter
-from jinja2 import Template
 from pydantic import BaseModel, TypeAdapter
 from pydantic.types import FilePath
 
-from ...__share__ import Logger
-from ..auditing import AuditBuilder
-from .audit_checking import check_audit
-from .ctx import update_ctx_count
-from .datetime_util import fmt_mtime
-from .pymd_engine import convert_markdown
+from ....__share__ import Logger
+from ...auditing import AuditBuilder
+from ..audit_checking import check_audit
+from ..datetime_util import fmt_mtime
+from ..pymd_engine import convert_markdown
+from .helpers import audit_template, log_template, skip_auditer
 
 __all__ = [
     "base",
@@ -30,37 +27,6 @@ __all__ = [
 Log = Logger(__name__).Log
 
 
-def log_template(func: Callable):
-    @wraps(func)
-    def wrapper(template: Template, *args, **kwargs):
-        Log(f"- Prepping {template} ({func.__name__})")
-        update_ctx_count(name=func.__name__)
-        return func(template, *args, **kwargs)
-
-    return wrapper
-
-
-def skip_auditer(
-    audit_builder: AuditBuilder, template: Template, func_name: str
-) -> bool:
-    if audit_builder.active:
-        auditer = audit_builder.auditer
-        if auditer.recheck and auditer.is_no_diff(template):
-            Log(f"  x Skipping ctx (known no diff): {template} ({func_name})")
-            return True
-    return False
-
-
-def audit_template(func):
-    @wraps(func)
-    def wrapper(template, audit_builder, *args, **kwargs):
-        if skip_auditer(audit_builder, template, func.__name__):
-            return {}
-        return func(template, audit_builder, *args, **kwargs)
-
-    return wrapper
-
-
 @log_template
 def base(
     template,
@@ -71,17 +37,16 @@ def base(
     if skip_auditer(audit_builder, template, "base"):
         return {}
     if audit_builder.active:
-        generate_flag = check_audit(
-            template, template_dir=template_dir, auditer=audit_builder.auditer
-        )
-        if not generate_flag:
+        auditer = audit_builder.auditer
+        generate = check_audit(template, template_dir=template_dir, auditer=auditer)
+        if not generate:
             Log(f"  ! Identified no regeneration: {template}")
     else:
-        generate_flag = True
+        generate = True
     template_path = Path(template.filename)
     return {
         "template_date": fmt_mtime(template_path),
-        "base_generate": generate_flag,
+        "base_generate": generate,
         "audit_builder": audit_builder,
         "template_dir": template_dir,
     }
@@ -92,6 +57,13 @@ def base(
 def index(template, audit_builder: AuditBuilder):
     """The home/front page (main subdomain index page)."""
     return {}
+
+
+class ArticleSeries(BaseModel):
+    title: str
+    desc: str
+    date: str
+    hidden: bool = False
 
 
 def is_valid_series_directory(path: Path) -> bool:
