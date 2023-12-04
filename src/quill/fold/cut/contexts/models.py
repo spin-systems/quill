@@ -5,22 +5,41 @@ from pathlib import Path
 
 import pandas as pd  # noqa: F401
 from jinja2 import Template
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from pydantic.types import FilePath
 
 from ...auditing import AuditBuilder, Auditer  # noqa: F401
 from ..audit_checking import check_audit
 from ..datetime_util import fmt_mtime
 
-__all__ = ["MDMetadata", "BaseContext", "ArticleSeries", "TemplateInfo"]
+__all__ = [
+    "RequiredMDMetadata",
+    "MDMetadata",
+    "BaseContext",
+    "ArticleSeries",
+    "TemplateInfo",
+]
 
 
-class MDMetadata(BaseModel):
+class RequiredMDMetadata(BaseModel, extra="forbid"):
     """The required keys for markdown file metadata (not exhaustive)."""
 
     title: str
     desc: str
     date: str
+
+
+class MDMetadata(RequiredMDMetadata, extra="forbid"):
+    """The total data model for markdown file metadata (exhaustive)."""
+
+    gh: str = None
+    size: int = None
+    topic: str = None
+    generate_footer: bool = Field(None, validation_alias="generate-footer")
+    generate_toc: bool = Field(None, validation_alias="generate-toc")
+    generate_teaser: bool = Field(None, validation_alias="generate-teaser")
+    index: int = None
+    order: int = None
 
 
 class BaseContext(BaseModel, arbitrary_types_allowed=True):
@@ -54,6 +73,12 @@ class ArticleContext(BaseModel, arbitrary_types_allowed=True):
     @classmethod
     def from_ctx(cls, template: Path) -> ArticleContext:
         return cls(url=template.stem, mtime=fmt_mtime(template))
+
+
+class MdContext(BaseModel, arbitrary_types_allowed=True):
+    post_content_html: str
+    katex: bool
+    series_toc: list[tuple[int, str, str]] = None
 
 
 class ArticleSeries(BaseModel):

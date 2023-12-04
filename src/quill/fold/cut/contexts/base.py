@@ -16,4 +16,7 @@ def base(template: Template, template_dir: Path, audit_builder: AuditBuilder):
     """A context providing the template date"""
     if skip_auditer(audit_builder, template, "base"):
         return {}
-    return BaseContext.from_ctx(template, template_dir, audit_builder).model_dump()
+    else:
+        return BaseContext.from_ctx(template, template_dir, audit_builder).model_dump(
+            exclude_unset=True
+        )
