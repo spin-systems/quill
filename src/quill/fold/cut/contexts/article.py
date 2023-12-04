@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import dateparser
-from pydantic import TypeAdapter
+from pydantic import TypeAdapter, ValidationError
 from pydantic.types import DirectoryPath, FilePath
 
 from ....__share__ import Logger
@@ -22,9 +22,24 @@ __all__ = [
 Log = Logger(__name__).Log
 
 
+def validate_series_dir(
+    cls: type[FilePath] | type[DirectoryPath], path: Path, why: str
+) -> bool:
+    try:
+        TypeAdapter(cls).validate_python(path)
+    except ValidationError:
+        Log(f" (!) Invalid series directory ({why}) {path}")
+        return False
+    else:
+        Log(f" (?) Valid series directory (not {why}) {path}")
+        return True
+
+
 def is_valid_series_directory(path: Path) -> bool:
-    TypeAdapter(DirectoryPath).validate_python(path)
-    return (path / "index.md").exists() and not path.name.startswith("_")
+    exists = validate_series_dir(DirectoryPath, path, why="doesn't exist")
+    has_index = validate_series_dir(FilePath, path / "index.md", why="no index")
+    hidden = path.name.startswith("_")
+    return exists and has_index and not hidden
 
 
 def sort_by_date(records: list[dict]) -> list[dict]:

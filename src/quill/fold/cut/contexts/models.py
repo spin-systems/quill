@@ -28,13 +28,20 @@ class RequiredMDMetadata(BaseModel, extra="forbid"):
 
     title: str
     desc: str
-    date: str
+    date: str | int
 
 
 class MDMetadata(RequiredMDMetadata, extra="forbid"):
     """The total data model for markdown file metadata (exhaustive)."""
 
     gh: str = None
+    rtd: str = None
+    hidden: bool = None
+    shortcite: str = None
+    inproceedings: str = None
+    pypi: str = None
+    link: str = None
+    stack: list[str] = None
     size: int = None
     topic: str = None
     generate_footer: bool = Field(None, validation_alias="generate-footer")
