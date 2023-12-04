@@ -16,8 +16,6 @@ __all__ = ["no_render", "render_md"]
 
 Log = Logger(__name__).Log
 
-# Helper functions and additional model methods would be defined here
-
 
 def no_render(site, template, **kwargs):
     Log(f"  - Usurped render for {template} (no_render)")
@@ -38,7 +36,6 @@ class TemplateIO(BaseModel, arbitrary_types_allowed=True):
     @computed_field
     @property
     def _upstream(self) -> str:
-        # return Path(LAYOUT_DIRNAME) / self.layout_filename
         return str(Path(LAYOUT_DIRNAME) / self.layout_filename)
 
     @computed_field

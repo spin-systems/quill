@@ -3,15 +3,14 @@ from __future__ import annotations
 from pathlib import Path
 
 import dateparser
-import frontmatter
 from pydantic import TypeAdapter
-from pydantic.types import FilePath
+from pydantic.types import DirectoryPath, FilePath
 
 from ....__share__ import Logger
 from ...auditing import AuditBuilder
-from ..datetime_util import fmt_mtime
 from .helpers import audit_template, log_template, skip_auditer
-from .models import MDMetadata
+from .md import load_md_meta
+from .models import ArticleContext
 
 __all__ = [
     "date_indexed_article_series",
@@ -24,9 +23,8 @@ Log = Logger(__name__).Log
 
 
 def is_valid_series_directory(path: Path) -> bool:
-    return (
-        path.is_dir() and (path / "index.md").exists() and not path.name.startswith("_")
-    )
+    TypeAdapter(DirectoryPath).validate_python(path)
+    return (path / "index.md").exists() and not path.name.startswith("_")
 
 
 def sort_by_date(records: list[dict]) -> list[dict]:
@@ -75,10 +73,8 @@ def article_series(template, is_path=False):
     """A context providing the URL, time last modified, and all frontmatter metadata"""
     template_path = template if is_path else Path(template.filename)
     index_path = TypeAdapter(FilePath).validate_python(template_path / "index.md")
-    md_content = frontmatter.load(index_path)
-    metadata = md_content.metadata
-    validated = MDMetadata.model_validate(md_content.metadata)
-    return {"url": template_path.stem, "mtime": fmt_mtime(template_path), **metadata}
+    metadata = load_md_meta(index_path)
+    return {**ArticleContext.from_ctx(template_path).model_dump(), **metadata}
 
 
 @audit_template
@@ -87,7 +83,5 @@ def article(template, audit_builder: AuditBuilder, is_path=False):
     template_path = template if is_path else Path(template.filename)
     if template_path.suffix != ".md":
         raise ValueError("Metadata is not supported for non-markdown articles")
-    md_content = frontmatter.load(template_path)
-    metadata = md_content.metadata
-    validated = MDMetadata.model_validate(md_content.metadata)
-    return {"url": template_path.stem, "mtime": fmt_mtime(template_path), **metadata}
+    metadata = load_md_meta(template_path)
+    return {**ArticleContext.from_ctx(template_path).model_dump(), **metadata}
