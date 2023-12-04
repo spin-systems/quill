@@ -44,11 +44,11 @@ def md_context(template, audit_builder: AuditBuilder):
         html_content = html_content.replace(series_toc_magic, "")
         kwargs["series_toc"] = make_toc(index_path=Path(template.filename))
     ctx = MdContext(post_content_html=html_content, katex=has_katex, **kwargs)
-    return ctx.model_dump(exclude_unset=True)
+    return ctx.model_dump()
 
 
 def load_md_meta(md: FilePath) -> dict:
     TypeAdapter(FilePath).validate_python(md)
     md_content = load(md)
     validated = MDMetadata.model_validate(md_content.metadata)
-    return validated.model_dump(exclude_unset=True)
+    return validated.model_dump()

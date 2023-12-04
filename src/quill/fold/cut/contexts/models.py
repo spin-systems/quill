@@ -16,6 +16,8 @@ __all__ = [
     "RequiredMDMetadata",
     "MDMetadata",
     "BaseContext",
+    "ArticleContext",
+    "MdContext",
     "ArticleSeries",
     "TemplateInfo",
 ]

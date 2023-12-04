@@ -17,6 +17,4 @@ def base(template: Template, template_dir: Path, audit_builder: AuditBuilder):
     if skip_auditer(audit_builder, template, "base"):
         return {}
     else:
-        return BaseContext.from_ctx(template, template_dir, audit_builder).model_dump(
-            exclude_unset=True
-        )
+        return BaseContext.from_ctx(template, template_dir, audit_builder).model_dump()

@@ -74,7 +74,7 @@ def article_series(template, is_path=False):
     template_path = template if is_path else Path(template.filename)
     index_path = TypeAdapter(FilePath).validate_python(template_path / "index.md")
     metadata = load_md_meta(index_path)
-    ctx = ArticleContext.from_ctx(template_path).model_dump(exclude_unset=True)
+    ctx = ArticleContext.from_ctx(template_path).model_dump()
     return {**ctx, **metadata}
 
 
@@ -85,5 +85,5 @@ def article(template, audit_builder: AuditBuilder, is_path=False):
     if template_path.suffix != ".md":
         raise ValueError("Metadata is not supported for non-markdown articles")
     metadata = load_md_meta(template_path)
-    ctx = ArticleContext.from_ctx(template_path).model_dump(exclude_unset=True)
+    ctx = ArticleContext.from_ctx(template_path).model_dump()
     return {**ctx, **metadata}
