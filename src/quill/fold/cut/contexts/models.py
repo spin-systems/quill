@@ -44,9 +44,9 @@ class MDMetadata(RequiredMDMetadata, extra="forbid"):
     stack: list[str] = None
     size: int = None
     topic: str = None
-    generate_footer: bool = Field(None, validation_alias="generate-footer")
-    generate_toc: bool = Field(None, validation_alias="generate-toc")
-    generate_teaser: bool = Field(None, validation_alias="generate-teaser")
+    generate_footer: bool = Field(False, validation_alias="generate-footer")
+    generate_toc: bool = Field(False, validation_alias="generate-toc")
+    generate_teaser: bool = Field(False, validation_alias="generate-teaser")
     index: int = None
     order: int = None
 
